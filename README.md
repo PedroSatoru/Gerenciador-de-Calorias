@@ -62,6 +62,13 @@ Site desenvolvido para controle de refeições, macro nutrientes e calorias
 | **Fluxos Alternativos** | A. Desistência: O usuário cancela a ação e o registro permanece salvo. |
 | **Pós-condições** | O registro é removido e os totais diários são corrigidos.  |
 
+## Backlog: 
+
+### Link do Trello: [BackLog no Trello](https://trello.com/b/7jleyhNv/backlog-gerenciador-de-calorias)
+<img width="1142" height="656" alt="image" src="https://github.com/user-attachments/assets/49786611-7797-45ee-a92c-cfcfeffdc300" />
+
+
+
 ## Jira:
 
 ### Link do Jira: [Board](https://gerenciador-de-calorias.atlassian.net/jira/core/projects/GDC/board?filter=&groupBy=status)
