@@ -175,5 +175,5 @@ UC não incluído na Sprint 1:
 ---
 
 ## 6) Links de entrega
-- Trello (Sprint Backlog): https://trello.com/b/7jleyhNv/backlog-gerenciador-de-calorias
+- Jira (Sprint Backlog): https://gerenciador-de-calorias.atlassian.net/jira/core/projects/GDC/board?filter=&groupBy=status
 - Git (atualizações do projeto): https://github.com/PedroSatoru/Gerenciador-de-Calorias
