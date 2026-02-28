@@ -69,6 +69,49 @@ Critérios utilizados:
 
 $$PNA = 7 + 6 + 11 + 8 + 8 = 40$$
 
+### 3.1.1 Justificativa
+- UC1
+    - Interação: envolve interação com usuário
+    - Regras: Para cadastrar um úsuário é necessário um email
+    - Entidades: Tabela de Usuário
+    - CRUD: Criar 
+- UC2
+    - Interação: envolve interação com usuário
+    - Regras: Para autenticar o usuário é necessário o cadastro
+    - Entidades: Tabela de Usuário
+    - CRUD: Ler
+- UC3
+    - Interação: envolve interação com usuário
+    - Regras:
+        - Usário tem que estar logado;
+        - Usuário precisa ter tokens na OpenRouter;
+        - Usuário precisa ter conta na OpenRouter;
+        - Usuário precisa ter API Key na OpenRouter;
+    - Entidades:
+        - Tabela de Usuário;
+        - Tabela de Refeições;
+        - Tabela controle Uso de Tokens;
+        - Tabela controle OpenRouter;
+    - CRUD: Criar 
+- UC4
+    - Interação: envolve interação com usuário
+    - Regras:
+        - O usuário precisa estar logado;
+        - O usuário precisa ter refeições cadastradas;
+    - Entidades:
+        - Tabela de Usuário;
+        - Tabela de Refeições;
+    - CRUD: LER
+- UC5
+    - Interação: envolve interação com usuário
+    - Regras:
+        - O usuário precisa estar logado;
+        - O usuário precisa ter refeições cadastradas;
+    - Entidades:
+        - Tabela de Usuário;
+        - Tabela de Refeições;
+    - CRUD: Excluir 
+
 ### 3.2 Fator ambiental
 - DA = 23
 - Faixa DA 12–23 → **C = 1**
