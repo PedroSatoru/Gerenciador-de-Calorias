@@ -158,19 +158,17 @@ Seleção de Casos de Uso para Sprint 1:
 - UC2 Autenticar usuário
 - UC3 Registrar refeição via texto (IA)
 - UC4 Visualizar histórico e totais diários
+- UC5 Excluir refeição
 
 Soma estimada:
 
-$$35{,}78 + 30{,}67 + 56{,}22 + 40{,}89 = 163{,}56h$$
+$$35{,}78 + 30{,}67 + 56{,}22 + 40{,}89 + 40{,}89 = 204{,}44h$$
 
 Validação:
 
-$$163{,}56h \leq 224h$$
+$$204{,}44h \leq 224h$$
 
 ✅ A Sprint 1 respeita a capacidade da equipe.
-
-UC não incluído na Sprint 1:
-- UC5 Excluir refeição (Sprint 2)
 
 ---
 
