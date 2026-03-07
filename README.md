@@ -6,14 +6,13 @@ Site desenvolvido para controle de refeições, macro nutrientes e calorias
 - SM: Pedro Satoru 
 - DEVs: Vitor Vianna e Pedro Correia
 
-## Backlog: 
+## Backlog e Kanban no Jira:
 
-### Link do Trello: [BackLog no Trello](https://trello.com/b/7jleyhNv/backlog-gerenciador-de-calorias)
-<img width="1142" height="656" alt="image" src="https://github.com/user-attachments/assets/49786611-7797-45ee-a92c-cfcfeffdc300" />
+### Link do Backlog: [Board](https://gerenciador-de-calorias.atlassian.net/jira/core/projects/GDC/board?filter=&groupBy=status)
+<img width="767" height="888" alt="image" src="https://github.com/user-attachments/assets/373c572d-1e2e-467d-8b3e-4fb2c3895510" />
 
 
+### Link do Kanban: [Kanban](https://gerenciador-de-calorias.atlassian.net/jira/core/projects/KGC/board?filter=&groupBy=status)
+<img width="775" height="893" alt="image" src="https://github.com/user-attachments/assets/c8c7ef0e-fb16-48f6-b282-92bd5c58e4ab" />
 
-## Jira:
 
-### Link do Jira: [Board](https://gerenciador-de-calorias.atlassian.net/jira/core/projects/GDC/board?filter=&groupBy=status)
-<img width="1005" height="890" alt="image" src="https://github.com/user-attachments/assets/ca694a65-8f4c-4ad6-8778-98a0d5e84951" />
