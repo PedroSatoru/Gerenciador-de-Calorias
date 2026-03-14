@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cadastro - Gerenciador de Calorias</title>
+    <link rel="stylesheet" href="cadastro.css">
+</head>
+<body>
+    <div class="register-container">
+        <h2>Criar conta</h2>
+        <form id="cadastro-form">
+            <div class="input-group">
+                <label for="nome">Nome</label>
+                <input type="text" id="nome" name="nome" required>
+            </div>
+            <div class="input-group">
+                <label for="email">Email</label>
+                <input type="email" id="email" name="email" required>
+            </div>
+            <div class="input-group">
+                <label for="senha">Senha</label>
+                <input type="password" id="senha" name="senha" required>
+            </div>
+            <div class="input-row">
+                <div class="input-group">
+                    <label for="sexo">Sexo</label>
+                    <select id="sexo" name="sexo" required>
+                        <option value="">Selecione</option>
+                        <option value="masculino">Masculino</option>
+                        <option value="feminino">Feminino</option>
+                        <option value="outro">Outro</option>
+                    </select>
+                </div>
+                <div class="input-group">
+                    <label for="idade">Idade</label>
+                    <input type="number" id="idade" name="idade" min="1" required>
+                </div>
+            </div>
+            <div class="input-group">
+                <label for="peso">Peso (kg)</label>
+                <input type="number" id="peso" name="peso" min="1" step="0.1" required>
+            </div>
+            <button type="submit">Cadastrar</button>
+        </form>
+        <div id="cadastro-message"></div>
+        <p class="form-link">Ja tem conta? <a href="login.html">Fazer login</a></p>
+    </div>
+    <script src="cadastro.js"></script>
+</body>
+</html>

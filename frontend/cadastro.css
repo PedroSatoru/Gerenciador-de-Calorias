@@ -1,0 +1,115 @@
+body {
+    background: linear-gradient(135deg, #f7f4ea 0%, #e6f0ea 100%);
+    font-family: Georgia, "Times New Roman", serif;
+    margin: 0;
+    padding: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+}
+
+.register-container {
+    background: rgba(255, 255, 255, 0.96);
+    padding: 2.5rem 2rem;
+    border-radius: 18px;
+    box-shadow: 0 20px 60px rgba(52, 74, 61, 0.14);
+    width: 100%;
+    max-width: 460px;
+}
+
+.register-container h2 {
+    margin: 0 0 1.5rem;
+    color: #1f3529;
+    font-size: 2rem;
+    text-align: center;
+}
+
+.input-group {
+    width: 100%;
+    margin-bottom: 1rem;
+}
+
+.input-row {
+    display: flex;
+    gap: 12px;
+}
+
+.input-group label {
+    display: block;
+    margin-bottom: 0.4rem;
+    color: #385444;
+    font-size: 0.95rem;
+}
+
+.input-group input,
+.input-group select {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 0.8rem 0.9rem;
+    border: 1px solid #cfd8d2;
+    border-radius: 10px;
+    font-size: 1rem;
+    background: #fcfdfb;
+}
+
+.input-group input:focus,
+.input-group select:focus {
+    border-color: #3f7d58;
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(63, 125, 88, 0.15);
+}
+
+button[type="submit"] {
+    width: 100%;
+    padding: 0.9rem;
+    background: #3f7d58;
+    color: #fff;
+    border: none;
+    border-radius: 10px;
+    font-size: 1rem;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+button[type="submit"]:hover {
+    background: #2f6044;
+}
+
+#cadastro-message {
+    min-height: 1.2rem;
+    margin-top: 1rem;
+    text-align: center;
+    color: #b23b3b;
+}
+
+.form-link {
+    margin: 1rem 0 0;
+    text-align: center;
+    color: #385444;
+}
+
+.form-link a {
+    color: #2f6044;
+    font-weight: 700;
+    text-decoration: none;
+}
+
+.form-link a:hover {
+    text-decoration: underline;
+}
+
+@media (max-width: 520px) {
+    body {
+        padding: 16px;
+    }
+
+    .register-container {
+        padding: 2rem 1.25rem;
+    }
+
+    .input-row {
+        flex-direction: column;
+        gap: 0;
+    }
+}
