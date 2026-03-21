@@ -28,8 +28,16 @@ loginForm.addEventListener('submit', async function (event) {
             throw new Error(result.message || 'Nao foi possivel realizar o login.');
         }
 
+        if (result.user && result.user.nome) {
+            localStorage.setItem('usuarioNome', result.user.nome);
+        }
+
         loginMessage.style.color = '#2f6044';
         loginMessage.textContent = result.message;
+
+        window.setTimeout(function () {
+            window.location.href = 'refeicoes.html';
+        }, 600);
     } catch (error) {
         loginMessage.style.color = '#e74c3c';
         loginMessage.textContent = error.message || 'Erro ao conectar com a API.';
