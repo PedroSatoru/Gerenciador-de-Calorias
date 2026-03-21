@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Refeicoes - Gerenciador de Calorias</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;700;800&family=Fraunces:opsz,wght@9..144,700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="refeicoes.css">
+</head>
+<body>
+    <div class="glow glow-left" aria-hidden="true"></div>
+    <div class="glow glow-right" aria-hidden="true"></div>
+
+    <main class="screen">
+        <section class="hero-card reveal">
+            <p class="eyebrow">Rotina alimentar inteligente</p>
+            <h1 id="welcome-title">Bem vindo!</h1>
+            <p class="subtitle">Cadastre uma nova refeicao.</p>
+
+            <button id="new-meal-button" type="button">Cadastrar uma refeicao</button>
+            <p id="action-feedback" class="action-feedback" aria-live="polite"></p>
+        </section>
+
+        <section class="meals-section reveal">
+            <h2>Refeicoes do Dia</h2>
+            
+            <div id="dashboard" class="dashboard">
+                <div class="dashboard-card">
+                    <div class="dashboard-label">Total Calorias</div>
+                    <div id="total-calorias" class="dashboard-value">0</div>
+                    <div class="dashboard-unit">kcal</div>
+                </div>
+                <div class="dashboard-card">
+                    <div class="dashboard-label">Refeicoes</div>
+                    <div id="total-refeicoes" class="dashboard-value">0</div>
+                    <div class="dashboard-unit">regs</div>
+                </div>
+                <div class="dashboard-card">
+                    <div class="dashboard-label">Proteina</div>
+                    <div id="total-proteina" class="dashboard-value">0</div>
+                    <div class="dashboard-unit">g</div>
+                </div>
+                <div class="dashboard-card">
+                    <div class="dashboard-label">Carboidrato</div>
+                    <div id="total-carbo" class="dashboard-value">0</div>
+                    <div class="dashboard-unit">g</div>
+                </div>
+                <div class="dashboard-card">
+                    <div class="dashboard-label">Gordura</div>
+                    <div id="total-gordura" class="dashboard-value">0</div>
+                    <div class="dashboard-unit">g</div>
+                </div>
+            </div>
+            
+            <div id="meals-container" class="meals-container">
+                <p id="loading-message" class="loading-message">Carregando refeicoes...</p>
+            </div>
+        </section>
+
+        <section class="support-grid">
+            <article class="support-card reveal delay-1">
+                <h2>Planejamento simples</h2>
+                <p>Registre cada refeicao em poucos cliques e mantenha seu dia alimentar organizado.</p>
+            </article>
+
+            <article class="support-card reveal delay-2">
+                <h2>Consistencia diaria</h2>
+                <p>Pequenos registros frequentes ajudam a construir habitos mais saudaveis e sustentaveis.</p>
+            </article>
+
+            <article class="support-card reveal delay-3">
+                <h2>Mais clareza</h2>
+                <p>Visualize melhor suas escolhas para ajustar porcoes e melhorar a qualidade da alimentacao.</p>
+            </article>
+        </section>
+    </main>
+
+    <!-- Modal Confirmação de Exclusão -->
+    <div id="delete-modal" class="modal hidden">
+        <div class="modal-content">
+            <h2>Excluir refeição</h2>
+            <p>Você tem certeza que quer deletar essa refeição?</p>
+            <div class="modal-actions">
+                <button id="cancel-delete-btn" class="btn-cancel">Não</button>
+                <button id="confirm-delete-btn" class="btn-danger">Sim</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="refeicoes.js"></script>
+</body>
+</html>

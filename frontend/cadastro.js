@@ -1,6 +1,6 @@
 const cadastroForm = document.getElementById('cadastro-form');
 const cadastroMessage = document.getElementById('cadastro-message');
-const cadastroApiBaseUrl = 'http://127.0.0.1:8000';
+const cadastroApiBaseUrl = 'http://127.0.0.1:8080';
 
 cadastroForm.addEventListener('submit', async function (event) {
     event.preventDefault();

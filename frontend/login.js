@@ -1,6 +1,6 @@
 const loginForm = document.getElementById('login-form');
 const loginMessage = document.getElementById('login-message');
-const loginApiBaseUrl = 'http://127.0.0.1:8000';
+const loginApiBaseUrl = 'http://127.0.0.1:8080';
 
 loginForm.addEventListener('submit', async function (event) {
     event.preventDefault();
