@@ -171,6 +171,26 @@ async def login_usuario(data: dict):
     except Exception:
         return build_error("Nao foi possivel realizar o login.", 500)
 
+@app.delete("/api/refeicoes/{refeicao_id}")
+async def deletar_refeicao_endpoint(refeicao_id: int):
+    """
+    Deleta uma refeicao informada pelo ID
+    """
+    if not refeicao_id:
+        return build_error("refeicao_id é obrigatório", 400)
+    
+    try:
+        # A função deletar_refeicao já faz a exclusão dos alimentos primeiro
+        deletar_refeicao(refeicao_id)
+        
+        return {
+            "success": True,
+            "message": "Refeição deletada com sucesso!"
+        }
+    except Exception as e:
+        print(f"Erro ao deletar refeicao {refeicao_id}: {str(e)}")
+        return build_error(f"Erro ao deletar refeicao: {str(e)}", 500)
+
 
 app.mount("/", StaticFiles(directory=FRONTEND_DIR), name="frontend")
 
