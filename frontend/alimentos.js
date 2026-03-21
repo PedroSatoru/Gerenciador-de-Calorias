@@ -11,11 +11,11 @@ const mensagemDiv = document.getElementById('alimentos-message');
  */
 function adicionarAlimento() {
     const novoId = alimentoCounter++;
-    
+
     const novoAlimento = document.createElement('div');
     novoAlimento.className = 'alimento-item';
     novoAlimento.id = `alimento-${novoId}`;
-    
+
     novoAlimento.innerHTML = `
         <div class="item-number">${alimentoCounter}</div>
         <div class="input-group">
@@ -42,19 +42,19 @@ function adicionarAlimento() {
         </div>
         <button type="button" class="btn-remover" aria-label="Remover alimento">×</button>
     `;
-    
+
     // Adiciona listener para o botão remover
     const btnRemover = novoAlimento.querySelector('.btn-remover');
     btnRemover.addEventListener('click', (e) => {
         e.preventDefault();
         removerAlimento(novoId);
     });
-    
+
     alimentosLista.appendChild(novoAlimento);
-    
+
     // Foca no primeiro input do novo alimento
     document.getElementById(`alimento-nome-${novoId}`).focus();
-    
+
     // Atualiza os números dos itens
     atualizarNumeros();
 }
@@ -64,14 +64,14 @@ function adicionarAlimento() {
  */
 function removerAlimento(id) {
     const alimento = document.getElementById(`alimento-${id}`);
-    
+
     // Verifica se há apenas um alimento
     const totalAlimentos = document.querySelectorAll('.alimento-item').length;
     if (totalAlimentos <= 1) {
         exibirMensagem('Você precisa de pelo menos um alimento!', 'error');
         return;
     }
-    
+
     alimento.remove();
     atualizarNumeros();
 }
@@ -93,7 +93,7 @@ function atualizarNumeros() {
 function exibirMensagem(texto, tipo) {
     mensagemDiv.textContent = texto;
     mensagemDiv.className = `alimentos-message ${tipo}`;
-    
+
     if (tipo === 'success') {
         setTimeout(() => {
             mensagemDiv.classList.remove('success');
@@ -108,14 +108,14 @@ function coletarDados() {
     const alimentos = [];
     const nomes = document.querySelectorAll('.alimento-nome');
     const quantidades = document.querySelectorAll('.alimento-quantidade');
-    
+
     for (let i = 0; i < nomes.length; i++) {
         alimentos.push({
             nome: nomes[i].value.trim(),
             quantidade: quantidades[i].value.trim()
         });
     }
-    
+
     return alimentos;
 }
 
@@ -129,18 +129,18 @@ function validarDados(alimentos) {
             return { valido: false, erro: 'Preencha todos os campos!' };
         }
     }
-    
+
     // Verifica se há alimentos duplicados
     const nomes = alimentos.map(a => a.nome.toLowerCase());
     const nomesDuplicados = nomes.filter((nome, index) => nomes.indexOf(nome) !== index);
-    
+
     if (nomesDuplicados.length > 0) {
-        return { 
-            valido: false, 
-            erro: `Alimento duplicado: ${nomesDuplicados[0]}` 
+        return {
+            valido: false,
+            erro: `Alimento duplicado: ${nomesDuplicados[0]}`
         };
     }
-    
+
     return { valido: true };
 }
 
@@ -150,19 +150,21 @@ function validarDados(alimentos) {
 async function enviarDados(alimentos) {
     try {
         exibirMensagem('Processando alimentos com IA...', 'info');
-        
+
         // Recupera usuario_id do localStorage
         const usuarioId = localStorage.getItem('usuarioId');
         if (!usuarioId) {
             exibirMensagem('Erro: Usuário não autenticado. Faça login novamente.', 'error');
             return;
         }
-        
+
         // Envia para o backend processar
+        const token = localStorage.getItem('accessToken');
         const response = await fetch('/api/processar-refeicao', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
             },
             body: JSON.stringify({
                 usuario_id: parseInt(usuarioId),
@@ -170,14 +172,14 @@ async function enviarDados(alimentos) {
                 tipo: 'Refeição'
             })
         });
-        
+
         const result = await response.json();
-        
+
         if (!result.success) {
             exibirMensagem(`Erro: ${result.message || 'Falha ao processar'}`, 'error');
             return;
         }
-        
+
         // Exibe sucesso e informações nutricionais
         const analise = result.analise;
         const resumo = `
@@ -188,10 +190,10 @@ async function enviarDados(alimentos) {
             Gordura: ${analise.gordura}g
         `;
         exibirMensagem(resumo, 'success');
-        
+
         // Armazena a análise da última refeição
         localStorage.setItem('ultimaRefeicao', JSON.stringify(result));
-        
+
         // Limpa o formulário após 3 segundos
         setTimeout(() => {
             alimentosForm.reset();
@@ -225,13 +227,13 @@ async function enviarDados(alimentos) {
                 </div>
             `;
             configurarListeners();
-            
+
             // Redireciona para tela de refeições
             setTimeout(() => {
                 window.location.href = 'refeicoes.html';
             }, 2000);
         }, 3000);
-        
+
     } catch (error) {
         console.error('Erro ao enviar dados:', error);
         exibirMensagem('Erro ao salvar refeição. Verifique a conexão.', 'error');
@@ -247,7 +249,7 @@ function configurarListeners() {
         e.preventDefault();
         adicionarAlimento();
     });
-    
+
     // Botão remover de cada alimento
     document.querySelectorAll('.btn-remover').forEach(btn => {
         btn.addEventListener('click', (e) => {
@@ -256,22 +258,22 @@ function configurarListeners() {
             removerAlimento(itemId);
         });
     });
-    
+
     // Formulário submit
     alimentosForm.addEventListener('submit', (e) => {
         e.preventDefault();
-        
+
         const alimentos = coletarDados();
         const validacao = validarDados(alimentos);
-        
+
         if (!validacao.valido) {
             exibirMensagem(validacao.erro, 'error');
             return;
         }
-        
+
         enviarDados(alimentos);
     });
-    
+
     // Permite pressionar Enter para adicionar novo alimento
     document.addEventListener('keydown', (e) => {
         if (e.key === 'Enter' && e.ctrlKey) {
@@ -282,8 +284,14 @@ function configurarListeners() {
 
 // Inicializa quando o DOM está carregado
 document.addEventListener('DOMContentLoaded', () => {
+    // Proteção de rota simplificada no frontend
+    if (!localStorage.getItem('accessToken')) {
+        window.location.href = 'login.html';
+        return;
+    }
+
     configurarListeners();
-    
+
     // Foca no primeiro campo
     document.getElementById('alimento-nome-0').focus();
 });

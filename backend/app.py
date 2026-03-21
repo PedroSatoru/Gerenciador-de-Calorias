@@ -4,33 +4,23 @@ import re
 import sys
 from pathlib import Path
 from datetime import datetime, timedelta
-import jwt
+import jwt # type: ignore
 
 # Adiciona o diretório backend ao sys.path para importações relativas
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-import requests
-from fastapi import FastAPI, Depends, Header, HTTPException
-from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse, JSONResponse
-from fastapi.staticfiles import StaticFiles
-from pydantic import BaseModel
+import requests # type: ignore
+from fastapi import FastAPI, Depends, Header, HTTPException # type: ignore
+from fastapi.middleware.cors import CORSMiddleware # type: ignore
+from fastapi.responses import FileResponse, JSONResponse # type: ignore
+from fastapi.staticfiles import StaticFiles # type: ignore
+from pydantic import BaseModel # type: ignore
 from typing import List, Optional
-from werkzeug.security import check_password_hash, generate_password_hash
-
-# Importa funções do banco de dados SQLite
-from database import (
-    init_db, get_usuario_by_email, get_usuario_by_id, criar_usuario,
-    criar_refeicao, criar_alimento_consumido, get_refeicoes_usuario,
-    get_alimentos_refeicao, deletar_refeicao
-)
+from werkzeug.security import check_password_hash, generate_password_hash # type: ignore
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 FRONTEND_DIR = BASE_DIR / "frontend"
 ENV_FILE = BASE_DIR / ".env"
-
-# Configuração Google Gemini
-GEMINI_API_KEY = "AIzaSyAquHVzFB7DTGw-NcGcO2_VqxYEZPu-qKA"
 
 
 
@@ -57,8 +47,11 @@ JWT_SECRET = os.environ.get("JWT_SECRET", "chave-secreta-padrao-segura")
 JWT_ALGORITHM = os.environ.get("JWT_ALGORITHM", "HS256")
 ACCESS_TOKEN_EXPIRE_MINUTES = int(os.environ.get("ACCESS_TOKEN_EXPIRE_MINUTES", 1440))
 
-# Inicializa banco de dados SQLite
-init_db()
+from database import ( # type: ignore
+    get_usuario_by_email, get_usuario_by_id, criar_usuario,
+    criar_refeicao, criar_alimento_consumido, get_refeicoes_usuario,
+    deletar_refeicao
+)
 
 app = FastAPI(title="API Gerenciador de Calorias", description="API para gerenciamento de refeições e cálculo de macros via IA.")
 
@@ -169,38 +162,17 @@ async def refeicoes_page():
 async def alimentos_page():
     return FileResponse(FRONTEND_DIR / "alimentos.html")
 
-@app.get("/login.html")
-async def login_page():
-    return FileResponse(FRONTEND_DIR / "login.html")
-
-@app.get("/cadastro.html")
-async def cadastro_page():
-    return FileResponse(FRONTEND_DIR / "cadastro.html")
-
 @app.post("/api/cadastro", tags=["Autenticação"])
 async def cadastro_usuario(request: CadastroRequest):
-    nome = request.nome.strip() if request.nome else ""
+    nome = (request.nome or "").strip()
     email = normalize_email(request.email)
     senha = request.senha
-    sexo = request.sexo.strip() if (request.sexo and isinstance(request.sexo, str)) else None
+    sexo = (request.sexo or "").strip() or None
     peso = request.peso
     idade = request.idade
 
     if not nome or not email or not senha:
         return build_error("Nome, email e senha sao obrigatorios.", 400)
-
-    try:
-        if peso not in (None, ""):
-            peso = float(peso)
-        else:
-            peso = None
-
-        if idade not in (None, ""):
-            idade = int(idade)
-        else:
-            idade = None
-    except (TypeError, ValueError):
-        return build_error("Peso ou idade em formato invalido.", 400)
 
     try:
         existing_user = get_usuario_by_email(email)
@@ -273,26 +245,6 @@ async def login_usuario(request: LoginRequest):
         print(f"Erro ao fazer login: {str(e)}")
         return build_error("Nao foi possivel realizar o login.", 500)
 
-@app.delete("/api/refeicoes/{refeicao_id}")
-async def deletar_refeicao_endpoint(refeicao_id: int):
-    """
-    Deleta uma refeicao informada pelo ID
-    """
-    if not refeicao_id:
-        return build_error("refeicao_id é obrigatório", 400)
-    
-    try:
-        # A função deletar_refeicao já faz a exclusão dos alimentos primeiro
-        deletar_refeicao(refeicao_id)
-        
-        return {
-            "success": True,
-            "message": "Refeição deletada com sucesso!"
-        }
-    except Exception as e:
-        print(f"Erro ao deletar refeicao {refeicao_id}: {str(e)}")
-        return build_error(f"Erro ao deletar refeicao: {str(e)}", 500)
-
 
 def analisar_com_openrouter(alimentos: list) -> dict:
     """
@@ -349,14 +301,12 @@ Retorne EXATAMENTE neste formato JSON, calcule os valores corretamente e não us
             json_match = re.search(r'\{.*\}', response_text, re.DOTALL)
             if json_match:
                 return json.loads(json_match.group())
-        else:
-            print(f"Erro na API OpenRouter: {response.text}")
         
-        return None
+        return {}
             
     except Exception as e:
         print(f"Erro ao chamar OpenRouter: {str(e)}")
-        return None
+        return {}
 
 
 def analisar_refeicao_com_ia(alimentos: list) -> dict:
@@ -364,7 +314,9 @@ def analisar_refeicao_com_ia(alimentos: list) -> dict:
     Processa alimentos com IA e retorna análise nutricional
     """
     analise = analisar_com_openrouter(alimentos)
-    return analise if analise else {"error": "Falha ao processar com IA"}
+    if not analise or not isinstance(analise, dict) or "calorias" not in analise:
+        return {"error": "Falha ao processar com IA ou formato inválido"}
+    return analise
 
 
 @app.post("/api/processar-refeicao", tags=["Refeições"])
@@ -477,183 +429,10 @@ async def analisar_alimentos(request: AnalisarAlimentosRequest):
 
 
 
-def analisar_com_gemini(alimentos: list) -> dict:
-    """
-    Usa Google Gemini REST API para analisar nutricionalmente os alimentos
-    Retorna: {calorias, proteina, carboidrato, gordura, alimentos: [{name, macros}]}
-    """
-    try:
-        alimentos_texto = "\n".join([f"- {a['nome']}: {a['quantidade']}" for a in alimentos])
-        
-        prompt = f"""Você é um nutricionista especializado em cálculo de macronutrientes.
-
-Analise os seguintes alimentos e retorne APENAS um JSON com a análise nutricional total:
-
-{alimentos_texto}
-
-Considere:
-- Valores nutricionais por 100g do alimento
-- A quantidade informada pelo usuário
-- Valores aproximados realistas
-
-Retorne EXATAMENTE neste formato JSON, sem explicações:
-{{
-    "calorias": 0.0,
-    "proteina": 0.0,
-    "carboidrato": 0.0,
-    "gordura": 0.0,
-    "alimentos": [
-        {{"nome": "alimento", "calorias": 0.0, "proteina": 0.0, "carboidrato": 0.0, "gordura": 0.0}}
-    ]
-}}"""
-        
-        url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={GEMINI_API_KEY}"
-        
-        headers = {"Content-Type": "application/json"}
-        
-        payload = {
-            "contents": [
-                {
-                    "parts": [
-                        {"text": prompt}
-                    ]
-                }
-            ]
-        }
-        
-        response = requests.post(url, headers=headers, json=payload, timeout=10)
-        
-        if response.status_code == 200:
-            data = response.json()
-            response_text = data.get("candidates", [{}])[0].get("content", {}).get("parts", [{}])[0].get("text", "")
-            
-            json_match = re.search(r'\{.*\}', response_text, re.DOTALL)
-            if json_match:
-                return json.loads(json_match.group())
-        
-        return None
-            
-    except Exception as e:
-        print(f"Erro ao chamar Gemini: {str(e)}")
-        return None
-
-
-def analisar_refeicao_com_ia(alimentos: list) -> dict:
-    """
-    Processa alimentos com Gemini e retorna análise nutricional
-    """
-    analise = analisar_com_gemini(alimentos)
-    return analise if analise else {"error": "Falha ao processar com Gemini"}
-
-
-@app.post("/api/processar-refeicao")
-async def processar_refeicao(data: dict):
-    """
-    Recebe alimentos, processa com IA, salva base de dados e retorna dados nutricionais
-    """
-    usuario_id = data.get("usuario_id")
-    alimentos = data.get("alimentos", [])
-    tipo_refeicao = data.get("tipo", "Refeição")
-    
-    if not usuario_id or not alimentos:
-        return build_error("usuario_id e alimentos são obrigatórios", 400)
-    
-    # Processa com IA
-    analise = analisar_refeicao_com_ia(alimentos)
-    
-    if "error" in analise:
-        return build_error(f"Erro ao processar com IA: {analise['error']}", 500)
-    
-    try:
-        # Verifica se usuário existe
-        usuario = get_usuario_by_id(usuario_id)
-        if not usuario:
-            return build_error("Usuário não encontrado", 404)
-        
-        # Cria registro de refeição com SQLite
-        refeicao_id = criar_refeicao(
-            usuario_id=usuario_id,
-            tipo=tipo_refeicao,
-            data_refeicao=datetime.now().date().isoformat(),
-            horario=datetime.now().time().isoformat(),
-            calorias=analise.get("calorias", 0),
-            proteina=analise.get("proteina", 0),
-            carboidrato=analise.get("carboidrato", 0),
-            gordura=analise.get("gordura", 0)
-        )
-        
-        # Salva alimentos consumidos
-        for alimento in alimentos:
-            criar_alimento_consumido(
-                refeicao_id=refeicao_id,
-                nome_alimento=alimento["nome"],
-                quantidade=alimento["quantidade"]
-            )
-        
-        return {
-            "success": True,
-            "message": "Refeição salva com sucesso!",
-            "refeicao_id": refeicao_id,
-            "analise": analise,
-        }
-        
-    except Exception as e:
-        print(f"Erro ao salvar refeição: {str(e)}")
-        return build_error(f"Erro ao salvar refeição: {str(e)}", 500)
-
-
-@app.post("/api/analizar-alimentos")
-async def analisar_alimentos(data: dict):
-    """
-    Apenas retorna a análise nutricional sem salvar no banco
-    (útil para preview antes de confirmar)
-    """
-    alimentos = data.get("alimentos", [])
-    
-    if not alimentos:
-        return build_error("Alimentos são obrigatórios", 400)
-    
-    analise = analisar_refeicao_com_ia(alimentos)
-    
-    if "error" in analise:
-        return build_error(f"Erro ao processar: {analise['error']}", 500)
-    
-    return {
-        "success": True,
-        "analise": analise,
-    }
-
-
-@app.get("/api/refeicoes/dia")
-async def get_refeicoes_dia(usuario_id: int):
-    """
-    Retorna as refeicoes do dia do usuario
-    """
-    if not usuario_id:
-        return build_error("usuario_id é obrigatorio", 400)
-    
-    try:
-        usuario = get_usuario_by_id(usuario_id)
-        if not usuario:
-            return build_error("Usuario nao encontrado", 404)
-        
-        data_hoje = datetime.now().date().isoformat()
-        refeicoes = get_refeicoes_usuario(usuario_id, data_hoje)
-        
-        return {
-            "success": True,
-            "refeicoes": refeicoes,
-            "data": data_hoje,
-        }
-    except Exception as e:
-        print(f"Erro ao buscar refeicoes: {str(e)}")
-        return build_error(f"Erro ao buscar refeicoes: {str(e)}", 500)
-
-
 app.mount("/", StaticFiles(directory=FRONTEND_DIR), name="frontend")
 
 
 if __name__ == "__main__":
-    import uvicorn
+    import uvicorn # type: ignore
 
     uvicorn.run(app, host="127.0.0.1", port=8000)
