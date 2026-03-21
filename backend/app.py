@@ -332,6 +332,32 @@ async def analisar_alimentos(data: dict):
     }
 
 
+@app.get("/api/refeicoes/dia")
+async def get_refeicoes_dia(usuario_id: int):
+    """
+    Retorna as refeicoes do dia do usuario
+    """
+    if not usuario_id:
+        return build_error("usuario_id é obrigatorio", 400)
+    
+    try:
+        usuario = get_usuario_by_id(usuario_id)
+        if not usuario:
+            return build_error("Usuario nao encontrado", 404)
+        
+        data_hoje = datetime.now().date().isoformat()
+        refeicoes = get_refeicoes_usuario(usuario_id, data_hoje)
+        
+        return {
+            "success": True,
+            "refeicoes": refeicoes,
+            "data": data_hoje,
+        }
+    except Exception as e:
+        print(f"Erro ao buscar refeicoes: {str(e)}")
+        return build_error(f"Erro ao buscar refeicoes: {str(e)}", 500)
+
+
 app.mount("/", StaticFiles(directory=FRONTEND_DIR), name="frontend")
 
 
