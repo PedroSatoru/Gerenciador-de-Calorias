@@ -1,6 +1,10 @@
 const loginForm = document.getElementById('login-form');
 const loginMessage = document.getElementById('login-message');
+<<<<<<< HEAD
 const loginApiBaseUrl = ''; // Caminho relativo para facilitar a hospedagem
+=======
+const loginApiBaseUrl = 'http://127.0.0.1:8080';
+>>>>>>> origin/feature/vitor
 
 loginForm.addEventListener('submit', async function (event) {
     event.preventDefault();

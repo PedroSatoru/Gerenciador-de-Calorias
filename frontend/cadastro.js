@@ -1,6 +1,10 @@
 const cadastroForm = document.getElementById('cadastro-form');
 const cadastroMessage = document.getElementById('cadastro-message');
+<<<<<<< HEAD
 const cadastroApiBaseUrl = ''; // Caminho relativo
+=======
+const cadastroApiBaseUrl = 'http://127.0.0.1:8080';
+>>>>>>> origin/feature/vitor
 
 cadastroForm.addEventListener('submit', async function (event) {
     event.preventDefault();
