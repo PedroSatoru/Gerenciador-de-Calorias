@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cadastro de Alimentos - Gerenciador de Calorias</title>
+    <link rel="stylesheet" href="alimentos.css">
+</head>
+<body>
+    <div class="alimentos-container">
+        <div class="header">
+            <h1>Cadastrar Alimentos</h1>
+            <p class="subtitle">Adicione um ou mais alimentos à sua refeição</p>
+        </div>
+
+        <form id="alimentos-form">
+            <div id="alimentos-lista">
+                <div class="alimento-item" id="alimento-0">
+                    <div class="item-number">1</div>
+                    <div class="input-group">
+                        <label for="alimento-nome-0">Nome do Alimento</label>
+                        <input 
+                            type="text" 
+                            id="alimento-nome-0" 
+                            name="alimento-nome" 
+                            class="alimento-nome" 
+                            placeholder="Ex: Arroz integral" 
+                            required
+                        >
+                    </div>
+                    <div class="input-group">
+                        <label for="alimento-quantidade-0">Quantidade</label>
+                        <input 
+                            type="text" 
+                            id="alimento-quantidade-0" 
+                            name="alimento-quantidade" 
+                            class="alimento-quantidade" 
+                            placeholder="Ex: 150g, 1 copo" 
+                            required
+                        >
+                    </div>
+                    <button type="button" class="btn-remover" aria-label="Remover alimento">×</button>
+                </div>
+            </div>
+
+            <button type="button" id="btn-adicionar" class="btn-adicionar">+ Adicionar outro alimento</button>
+
+            <div class="form-actions">
+                <button type="submit" class="btn-submit">Salvar Refeição</button>
+                <button type="button" class="btn-cancel" onclick="history.back()">Cancelar</button>
+            </div>
+        </form>
+
+        <div id="alimentos-message" class="alimentos-message"></div>
+    </div>
+
+    <script src="alimentos.js"></script>
+</body>
+</html>

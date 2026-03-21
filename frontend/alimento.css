@@ -1,0 +1,278 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    background: linear-gradient(135deg, #f7f4ea 0%, #e6f0ea 100%);
+    font-family: Georgia, "Times New Roman", serif;
+    min-height: 100vh;
+    padding: 24px;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+}
+
+.alimentos-container {
+    background: rgba(255, 255, 255, 0.96);
+    padding: 2.5rem 2rem;
+    border-radius: 18px;
+    box-shadow: 0 20px 60px rgba(52, 74, 61, 0.14);
+    width: 100%;
+    max-width: 600px;
+    margin-top: 2rem;
+}
+
+.header {
+    margin-bottom: 2rem;
+    text-align: center;
+}
+
+.header h1 {
+    color: #1f3529;
+    font-size: 2rem;
+    margin-bottom: 0.5rem;
+}
+
+.header .subtitle {
+    color: #385444;
+    font-size: 1rem;
+}
+
+#alimentos-lista {
+    margin-bottom: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1.2rem;
+}
+
+.alimento-item {
+    display: grid;
+    grid-template-columns: 30px 1fr 1fr 40px;
+    gap: 0.8rem;
+    align-items: flex-end;
+    padding: 1.2rem;
+    background: #f9faf8;
+    border: 1px solid #e0e5e1;
+    border-radius: 12px;
+    transition: all 0.3s ease;
+}
+
+.alimento-item:hover {
+    background: #f5f7f4;
+    border-color: #c5d0c8;
+    box-shadow: 0 4px 12px rgba(52, 74, 61, 0.08);
+}
+
+.alimento-item:focus-within {
+    border-color: #7a9b82;
+    background: white;
+}
+
+.item-number {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    height: 30px;
+    background: #7a9b82;
+    color: white;
+    border-radius: 50%;
+    font-weight: bold;
+    font-size: 0.9rem;
+}
+
+.input-group {
+    display: flex;
+    flex-direction: column;
+}
+
+.input-group label {
+    display: block;
+    margin-bottom: 0.3rem;
+    color: #385444;
+    font-size: 0.9rem;
+    font-weight: 500;
+}
+
+.input-group input {
+    padding: 0.7rem 0.8rem;
+    border: 1px solid #cfd8d2;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+    background: white;
+    transition: all 0.3s ease;
+}
+
+.input-group input:focus {
+    outline: none;
+    border-color: #7a9b82;
+    background: #fff;
+}
+
+.input-group input::placeholder {
+    color: #a5b5ac;
+}
+
+.btn-remover {
+    width: 40px;
+    height: 40px;
+    padding: 0;
+    background: #e8c6c6;
+    border: 1px solid #d9a9a9;
+    border-radius: 50%;
+    font-size: 1.5rem;
+    color: #8b4545;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.btn-remover:hover {
+    background: #d9a9a9;
+    color: #fff;
+}
+
+.btn-remover:active {
+    transform: scale(0.95);
+}
+
+.btn-adicionar {
+    width: 100%;
+    padding: 0.9rem;
+    background: #7a9b82;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    margin-bottom: 1.5rem;
+}
+
+.btn-adicionar:hover {
+    background: #6a8b72;
+    transform: translateY(-2px);
+}
+
+.btn-adicionar:active {
+    transform: translateY(0);
+}
+
+.form-actions {
+    display: flex;
+    gap: 0.8rem;
+    justify-content: center;
+}
+
+.btn-submit,
+.btn-cancel {
+    padding: 0.85rem 1.5rem;
+    border: none;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    flex: 1;
+}
+
+.btn-submit {
+    background: #7a9b82;
+    color: white;
+}
+
+.btn-submit:hover {
+    background: #6a8b72;
+    transform: translateY(-2px);
+    box-shadow: 0 8px 16px rgba(122, 155, 130, 0.3);
+}
+
+.btn-submit:active {
+    transform: translateY(0);
+}
+
+.btn-cancel {
+    background: #e0e5e1;
+    color: #385444;
+    border: 1px solid #cfd8d2;
+}
+
+.btn-cancel:hover {
+    background: #d0d5d1;
+    border-color: #b5c0b8;
+}
+
+.btn-cancel:active {
+    transform: scale(0.98);
+}
+
+.alimentos-message {
+    margin-top: 1.2rem;
+    padding: 0.9rem;
+    border-radius: 8px;
+    text-align: center;
+    min-height: 1.5rem;
+    font-size: 0.95rem;
+    display: none;
+}
+
+.alimentos-message.success {
+    display: block;
+    background: #d4edda;
+    color: #155724;
+    border: 1px solid #c3e6cb;
+}
+
+.alimentos-message.error {
+    display: block;
+    background: #f8d7da;
+    color: #721c24;
+    border: 1px solid #f5c6cb;
+}
+
+/* Responsive */
+@media (max-width: 600px) {
+    .alimentos-container {
+        padding: 1.5rem 1rem;
+    }
+
+    .header h1 {
+        font-size: 1.5rem;
+    }
+
+    .alimento-item {
+        grid-template-columns: 1fr;
+        gap: 0.6rem;
+    }
+
+    .item-number {
+        grid-column: 1;
+        grid-row: 1;
+        position: absolute;
+        margin-left: -35px;
+    }
+
+    .alimento-item {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .btn-remover {
+        grid-column: 2;
+        grid-row: 1 / 3;
+    }
+
+    .form-actions {
+        flex-direction: column;
+    }
+
+    .btn-submit,
+    .btn-cancel {
+        width: 100%;
+    }
+}

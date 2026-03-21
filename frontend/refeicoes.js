@@ -26,5 +26,5 @@ if (usuarioNome) {
 }
 
 newMealButton.addEventListener('click', function () {
-    actionFeedback.textContent = 'Estamos preparando a tela de cadastro de refeicao para voce.';
+    window.location.href = 'alimentos.html';
 });
