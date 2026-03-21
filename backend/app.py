@@ -142,6 +142,24 @@ def normalize_email(value):
 async def home():
     return FileResponse(FRONTEND_DIR / "login.html")
 
+@app.get("/login.html")
+async def login_page():
+    return FileResponse(FRONTEND_DIR / "login.html")
+
+
+@app.get("/cadastro.html")
+async def cadastro_page():
+    return FileResponse(FRONTEND_DIR / "cadastro.html")
+
+
+@app.get("/refeicoes.html")
+async def refeicoes_page():
+    return FileResponse(FRONTEND_DIR / "refeicoes.html")
+
+
+@app.get("/alimentos.html")
+async def alimentos_page():
+    return FileResponse(FRONTEND_DIR / "alimentos.html")
 
 @app.get("/login.html")
 async def login_page():
