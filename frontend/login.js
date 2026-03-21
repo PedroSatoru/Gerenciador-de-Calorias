@@ -30,6 +30,7 @@ loginForm.addEventListener('submit', async function (event) {
 
         if (result.user && result.user.nome) {
             localStorage.setItem('usuarioNome', result.user.nome);
+            localStorage.setItem('usuarioId', result.user.id);
         }
 
         loginMessage.style.color = '#2f6044';

@@ -145,20 +145,56 @@ function validarDados(alimentos) {
 }
 
 /**
- * Envia os dados para o servidor (por enquanto apenas log)
+ * Envia os dados para o servidor e processa a resposta
  */
 async function enviarDados(alimentos) {
     try {
-        // Aqui você pode implementar a chamada à API do backend
-        console.log('Alimentos para enviar:', alimentos);
+        exibirMensagem('Processando alimentos com IA...', 'info');
         
-        // Simulação de envio
-        exibirMensagem('Refeição salva com sucesso!', 'success');
+        // Recupera usuario_id do localStorage
+        const usuarioId = localStorage.getItem('usuarioId');
+        if (!usuarioId) {
+            exibirMensagem('Erro: Usuário não autenticado. Faça login novamente.', 'error');
+            return;
+        }
         
-        // Limpa o formulário após 2 segundos
+        // Envia para o backend processar
+        const response = await fetch('/api/processar-refeicao', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                usuario_id: parseInt(usuarioId),
+                alimentos: alimentos,
+                tipo: 'Refeição'
+            })
+        });
+        
+        const result = await response.json();
+        
+        if (!result.success) {
+            exibirMensagem(`Erro: ${result.message || 'Falha ao processar'}`, 'error');
+            return;
+        }
+        
+        // Exibe sucesso e informações nutricionais
+        const analise = result.analise;
+        const resumo = `
+            Refeição salva com sucesso!
+            Calorias: ${analise.calorias} kcal | 
+            Proteína: ${analise.proteina}g | 
+            Carbs: ${analise.carboidrato}g | 
+            Gordura: ${analise.gordura}g
+        `;
+        exibirMensagem(resumo, 'success');
+        
+        // Armazena a análise da última refeição
+        localStorage.setItem('ultimaRefeicao', JSON.stringify(result));
+        
+        // Limpa o formulário após 3 segundos
         setTimeout(() => {
             alimentosForm.reset();
-            // Redefine para o estado inicial
             alimentoCounter = 1;
             alimentosLista.innerHTML = `
                 <div class="alimento-item" id="alimento-0">
@@ -189,11 +225,16 @@ async function enviarDados(alimentos) {
                 </div>
             `;
             configurarListeners();
-        }, 2000);
+            
+            // Redireciona para tela de refeições
+            setTimeout(() => {
+                window.location.href = 'refeicoes.html';
+            }, 2000);
+        }, 3000);
         
     } catch (error) {
         console.error('Erro ao enviar dados:', error);
-        exibirMensagem('Erro ao salvar refeição. Tente novamente!', 'error');
+        exibirMensagem('Erro ao salvar refeição. Verifique a conexão.', 'error');
     }
 }
 

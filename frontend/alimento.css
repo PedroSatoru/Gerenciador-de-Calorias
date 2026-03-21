@@ -236,6 +236,13 @@ body {
     border: 1px solid #f5c6cb;
 }
 
+.alimentos-message.info {
+    display: block;
+    background: #d1ecf1;
+    color: #0c5460;
+    border: 1px solid #bee5eb;
+}
+
 /* Responsive */
 @media (max-width: 600px) {
     .alimentos-container {
