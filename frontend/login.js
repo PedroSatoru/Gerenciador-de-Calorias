@@ -1,6 +1,6 @@
 const loginForm = document.getElementById('login-form');
 const loginMessage = document.getElementById('login-message');
-const loginApiBaseUrl = 'http://127.0.0.1:8000';
+const loginApiBaseUrl = ''; // Caminho relativo para facilitar a hospedagem
 
 loginForm.addEventListener('submit', async function (event) {
     event.preventDefault();
@@ -30,6 +30,10 @@ loginForm.addEventListener('submit', async function (event) {
 
         if (result.user && result.user.nome) {
             localStorage.setItem('usuarioNome', result.user.nome);
+            localStorage.setItem('usuarioId', result.user.id);
+            if (result.access_token) {
+                localStorage.setItem('accessToken', result.access_token);
+            }
         }
 
         loginMessage.style.color = '#2f6044';

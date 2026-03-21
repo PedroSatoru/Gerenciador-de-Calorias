@@ -1,17 +1,27 @@
+import json
 import os
+import re
+import sys
 from pathlib import Path
+from datetime import datetime, timedelta
+import jwt
 
-from fastapi import FastAPI
+# Adiciona o diretório backend ao sys.path para importações relativas
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+
+import requests
+from fastapi import FastAPI, Depends, Header, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
-from supabase import Client, create_client
+from pydantic import BaseModel
+from typing import List, Optional
 from werkzeug.security import check_password_hash, generate_password_hash
-
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 FRONTEND_DIR = BASE_DIR / "frontend"
 ENV_FILE = BASE_DIR / ".env"
+
 
 
 def load_env_file(file_path: Path):
@@ -29,16 +39,47 @@ def load_env_file(file_path: Path):
 
 load_env_file(ENV_FILE)
 
-SUPABASE_URL = os.getenv("SUPABASE_URL")
-SUPABASE_KEY = os.getenv("SUPABASE_KEY")
+# Configuração OpenRouter
+OPENROUTER_API_KEY = os.environ.get("OPENROUTER_API_KEY", "")
 
-if not SUPABASE_URL or not SUPABASE_KEY:
-    raise RuntimeError("Defina SUPABASE_URL e SUPABASE_KEY no arquivo .env.")
+# Configuração JWT
+JWT_SECRET = os.environ.get("JWT_SECRET", "chave-secreta-padrao-segura")
+JWT_ALGORITHM = os.environ.get("JWT_ALGORITHM", "HS256")
+ACCESS_TOKEN_EXPIRE_MINUTES = int(os.environ.get("ACCESS_TOKEN_EXPIRE_MINUTES", 1440))
 
+from database import (
+    get_usuario_by_email, get_usuario_by_id, criar_usuario,
+    criar_refeicao, criar_alimento_consumido, get_refeicoes_usuario,
+    deletar_refeicao
+)
 
-app = FastAPI()
-supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
+app = FastAPI(title="API Gerenciador de Calorias", description="API para gerenciamento de refeições e cálculo de macros via IA.")
 
+# --- Modelos Pydantic para o Swagger (/docs) ---
+class CadastroRequest(BaseModel):
+    nome: str
+    email: str
+    senha: str
+    sexo: Optional[str] = None
+    peso: Optional[float] = None
+    idade: Optional[int] = None
+
+class LoginRequest(BaseModel):
+    email: str
+    senha: str
+
+class AlimentoItem(BaseModel):
+    nome: str
+    quantidade: str
+
+class ProcessarRefeicaoRequest(BaseModel):
+    usuario_id: int
+    tipo: str = "Refeição"
+    alimentos: List[AlimentoItem]
+
+class AnalisarAlimentosRequest(BaseModel):
+    alimentos: List[AlimentoItem]
+# -----------------------------------------------
 
 app.add_middleware(
     CORSMiddleware,
@@ -56,6 +97,43 @@ def build_error(message, status_code):
     )
 
 
+def create_access_token(data: dict):
+    """Gera um token JWT para o usuário"""
+    to_encode = data.copy()
+    expire = datetime.utcnow() + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    to_encode.update({"exp": expire})
+    encoded_jwt = jwt.encode(to_encode, JWT_SECRET, algorithm=JWT_ALGORITHM)
+    return encoded_jwt
+
+
+async def get_current_user(authorization: str = Header(None)):
+    """Dependência para verificar o token JWT e retornar o ID do usuário"""
+    if not authorization:
+        raise HTTPException(status_code=401, detail="Token de autorização ausente")
+    
+    try:
+        # Formato esperado: "Bearer <token>"
+        parts = authorization.split(" ")
+        if len(parts) != 2 or parts[0].lower() != "bearer":
+             raise HTTPException(status_code=401, detail="Formato de token inválido")
+             
+        token = parts[1]
+        payload = jwt.decode(token, JWT_SECRET, algorithms=[JWT_ALGORITHM])
+        user_id = payload.get("sub")
+        
+        if user_id is None:
+            raise HTTPException(status_code=401, detail="Token inválido: sub ausente")
+            
+        return int(user_id)
+    except jwt.ExpiredSignatureError:
+        raise HTTPException(status_code=401, detail="Token expirado")
+    except jwt.InvalidTokenError:
+        raise HTTPException(status_code=401, detail="Token inválido")
+    except Exception as e:
+        print(f"Erro na verificação do token: {str(e)}")
+        raise HTTPException(status_code=401, detail="Não foi possível validar as credenciais")
+
+
 def normalize_email(value):
     return (value or "").strip().lower()
 
@@ -65,65 +143,62 @@ async def home():
     return FileResponse(FRONTEND_DIR / "login.html")
 
 
-@app.post("/api/cadastro")
-async def cadastro_usuario(data: dict):
+@app.get("/login.html")
+async def login_page():
+    return FileResponse(FRONTEND_DIR / "login.html")
 
-    nome = (data.get("nome") or "").strip()
-    email = normalize_email(data.get("email"))
-    senha = data.get("senha") or ""
-    sexo = (data.get("sexo") or "").strip() or None
-    peso = data.get("peso")
-    idade = data.get("idade")
+
+@app.get("/cadastro.html")
+async def cadastro_page():
+    return FileResponse(FRONTEND_DIR / "cadastro.html")
+
+
+@app.get("/refeicoes.html")
+async def refeicoes_page():
+    return FileResponse(FRONTEND_DIR / "refeicoes.html")
+
+
+@app.get("/alimentos.html")
+async def alimentos_page():
+    return FileResponse(FRONTEND_DIR / "alimentos.html")
+
+@app.post("/api/cadastro", tags=["Autenticação"])
+async def cadastro_usuario(request: CadastroRequest):
+    nome = request.nome.strip() if request.nome else ""
+    email = normalize_email(request.email)
+    senha = request.senha
+    sexo = request.sexo.strip() if (request.sexo and isinstance(request.sexo, str)) else None
+    peso = request.peso
+    idade = request.idade
 
     if not nome or not email or not senha:
         return build_error("Nome, email e senha sao obrigatorios.", 400)
 
     try:
-        if peso not in (None, ""):
-            peso = float(peso)
-        else:
-            peso = None
-
-        if idade not in (None, ""):
-            idade = int(idade)
-        else:
-            idade = None
-    except (TypeError, ValueError):
-        return build_error("Peso ou idade em formato invalido.", 400)
-
-    try:
-        existing_user = (
-            supabase.table("usuarios")
-            .select("id")
-            .eq("email", email)
-            .limit(1)
-            .execute()
-        )
-
-        if existing_user.data:
+        existing_user = get_usuario_by_email(email)
+        if existing_user:
             return build_error("Ja existe um usuario com este email.", 409)
 
-        created_user = (
-            supabase.table("usuarios")
-            .insert(
-                {
-                    "nome": nome,
-                    "email": email,
-                    "senha": generate_password_hash(senha),
-                    "sexo": sexo,
-                    "peso": peso,
-                    "idade": idade,
-                }
-            )
-            .execute()
+        usuario_id = criar_usuario(
+            nome=nome,
+            email=email,
+            senha_hash=generate_password_hash(senha),
+            sexo=sexo,
+            peso=peso,
+            idade=idade
         )
-
-        usuario = created_user.data[0]
+        
+        usuario = get_usuario_by_id(usuario_id)
+        
+        # Gera o token de acesso
+        access_token = create_access_token(data={"sub": str(usuario["id"])})
+        
         return JSONResponse(
             status_code=201,
             content={
                 "success": True,
                 "message": "Usuario cadastrado com sucesso.",
+                "access_token": access_token,
                 "user": {
                     "id": usuario["id"],
                     "nome": usuario["nome"],
@@ -131,45 +206,227 @@ async def cadastro_usuario(data: dict):
                 },
             },
         )
-    except Exception:
+    except Exception as e:
+        print(f"Erro ao cadastrar usuário: {str(e)}")
         return build_error("Nao foi possivel cadastrar o usuario.", 500)
 
 
-@app.post("/api/login")
-async def login_usuario(data: dict):
-    email = normalize_email(data.get("email"))
-    senha = data.get("senha") or ""
+@app.post("/api/login", tags=["Autenticação"])
+async def login_usuario(request: LoginRequest):
+    email = normalize_email(request.email)
+    senha = request.senha
 
     if not email or not senha:
         return build_error("Email e senha sao obrigatorios.", 400)
 
     try:
-        response = (
-            supabase.table("usuarios")
-            .select("id, nome, email, senha")
-            .eq("email", email)
-            .limit(1)
-            .execute()
-        )
-
-        if not response.data:
+        usuario = get_usuario_by_email(email)
+        
+        if not usuario:
             return build_error("Email ou senha invalidos.", 401)
 
-        usuario = response.data[0]
         if not check_password_hash(usuario["senha"], senha):
             return build_error("Email ou senha invalidos.", 401)
+
+        # Gera o token de acesso
+        access_token = create_access_token(data={"sub": str(usuario["id"])})
 
         return {
             "success": True,
             "message": "Login realizado com sucesso.",
+            "access_token": access_token,
             "user": {
                 "id": usuario["id"],
                 "nome": usuario["nome"],
                 "email": usuario["email"],
             },
         }
-    except Exception:
+    except Exception as e:
+        print(f"Erro ao fazer login: {str(e)}")
         return build_error("Nao foi possivel realizar o login.", 500)
+
+
+def analisar_com_openrouter(alimentos: list) -> dict:
+    """
+    Usa OpenRouter API para analisar nutricionalmente os alimentos (modelo Gemini 2.5 Flash via OpenRouter)
+    Retorna: {calorias, proteina, carboidrato, gordura, alimentos: [{name, macros}]}
+    """
+    try:
+        alimentos_texto = "\n".join([f"- {a['nome']}: {a['quantidade']}" for a in alimentos])
+        
+        prompt = f"""Você é um nutricionista especializado em cálculo de macronutrientes.
+
+Analise os seguintes alimentos e retorne APENAS um JSON com a análise nutricional total:
+
+{alimentos_texto}
+
+Considere:
+- Valores nutricionais por 100g do alimento
+- A quantidade informada pelo usuário
+- Valores aproximados realistas
+
+Retorne EXATAMENTE neste formato JSON, calcule os valores corretamente e não use números zerados como padrão:
+{{
+    "calorias": 150.5,
+    "proteina": 10.2,
+    "carboidrato": 5.5,
+    "gordura": 2.1,
+    "alimentos": [
+        {{"nome": "alimento X", "calorias": 150.5, "proteina": 10.2, "carboidrato": 5.5, "gordura": 2.1}}
+    ]
+}}"""
+        
+        url = "https://openrouter.ai/api/v1/chat/completions"
+        
+        headers = {
+            "Authorization": f"Bearer {OPENROUTER_API_KEY}",
+            "Content-Type": "application/json",
+            "HTTP-Referer": "http://127.0.0.1:8000",
+            "X-Title": "Gerenciador Calorias"
+        }
+        
+        payload = {
+            "model": "google/gemini-2.5-flash",
+            "messages": [
+                {"role": "user", "content": prompt}
+            ]
+        }
+        
+        response = requests.post(url, headers=headers, json=payload, timeout=15)
+        
+        if response.status_code == 200:
+            data = response.json()
+            response_text = data.get("choices", [{}])[0].get("message", {}).get("content", "")
+            
+            json_match = re.search(r'\{.*\}', response_text, re.DOTALL)
+            if json_match:
+                return json.loads(json_match.group())
+        else:
+            print(f"Erro na API OpenRouter: {response.text}")
+        
+        return None
+            
+    except Exception as e:
+        print(f"Erro ao chamar OpenRouter: {str(e)}")
+        return None
+
+
+def analisar_refeicao_com_ia(alimentos: list) -> dict:
+    """
+    Processa alimentos com IA e retorna análise nutricional
+    """
+    analise = analisar_com_openrouter(alimentos)
+    return analise if analise else {"error": "Falha ao processar com IA"}
+
+
+@app.post("/api/processar-refeicao", tags=["Refeições"])
+async def processar_refeicao(request: ProcessarRefeicaoRequest, user_id: int = Depends(get_current_user)):
+    """
+    Recebe alimentos, processa com IA, salva banco de dados e retorna dados nutricionais
+    """
+    # Usamos o user_id vindo do token em vez do enviado no body para maior segurança
+    usuario_id = user_id
+    alimentos = [{"nome": item.nome, "quantidade": item.quantidade} for item in request.alimentos]
+    tipo_refeicao = request.tipo
+    
+    if not usuario_id or not alimentos:
+        return build_error("usuario_id e alimentos são obrigatórios", 400)
+        
+    analise = analisar_refeicao_com_ia(alimentos)
+    
+    if "error" in analise:
+        return build_error(f"Erro ao processar com IA: {analise['error']}", 500)
+    
+    try:
+        # Verifica se usuário existe
+        usuario = get_usuario_by_id(usuario_id)
+        if not usuario:
+            return build_error("Usuário não encontrado", 404)
+            
+        # Cria registro de refeição
+        refeicao_id = criar_refeicao(
+            usuario_id=usuario_id,
+            tipo=tipo_refeicao,
+            data_refeicao=datetime.now().date().isoformat(),
+            horario=datetime.now().time().isoformat(),
+            calorias=analise.get("calorias", 0),
+            proteina=analise.get("proteina", 0),
+            carboidrato=analise.get("carboidrato", 0),
+            gordura=analise.get("gordura", 0)
+        )
+        
+        # Salva alimentos consumidos
+        for alimento in alimentos:
+            criar_alimento_consumido(
+                refeicao_id=refeicao_id,
+                nome_alimento=alimento["nome"],
+                quantidade=alimento["quantidade"]
+            )
+        
+        return {
+            "success": True,
+            "message": "Refeição salva com sucesso!",
+            "refeicao_id": refeicao_id,
+            "analise": analise,
+        }
+        
+    except Exception as e:
+        print(f"Erro ao salvar refeição: {str(e)}")
+        return build_error(f"Erro ao salvar refeição: {str(e)}", 500)
+
+@app.get("/api/refeicoes/dia", tags=["Refeições"])
+async def get_refeicoes_dia(user_id: int = Depends(get_current_user)):
+    try:
+        usuario_id = user_id
+        usuario = get_usuario_by_id(usuario_id)
+        if not usuario:
+            return build_error("Usuario nao encontrado", 404)
+        data_hoje = datetime.now().date().isoformat()
+        refeicoes = get_refeicoes_usuario(usuario_id, data_hoje)
+        return {
+            "success": True,
+            "refeicoes": refeicoes,
+            "data": data_hoje,
+        }
+    except Exception as e:
+        print(f"Erro buscar refeicoes: {str(e)}")
+        return build_error(f"Erro ao buscar refeicoes: {str(e)}", 500)
+
+@app.delete("/api/refeicoes/{refeicao_id}", tags=["Refeições"])
+async def deletar_refeicao_endpoint(refeicao_id: int, user_id: int = Depends(get_current_user)):
+    if not refeicao_id:
+        return build_error("refeicao_id é obrigatório", 400)
+    try:
+        deletar_refeicao(refeicao_id)
+        return {"success": True, "message": "Refeição deletada"}
+    except Exception as e:
+        print(f"Erro deletar: {str(e)}")
+        return build_error(f"Erro ao deletar refeicao: {str(e)}", 500)
+
+
+@app.post("/api/analizar-alimentos", tags=["Refeições"])
+async def analisar_alimentos(request: AnalisarAlimentosRequest):
+    """
+    Apenas retorna a análise nutricional sem salvar no banco
+    (útil para preview antes de confirmar)
+    """
+    alimentos = [{"nome": item.nome, "quantidade": item.quantidade} for item in request.alimentos]
+    
+    if not alimentos:
+        return build_error("Alimentos são obrigatórios", 400)
+    
+    analise = analisar_refeicao_com_ia(alimentos)
+    
+    if "error" in analise:
+        return build_error(f"Erro ao processar: {analise['error']}", 500)
+    
+    return {
+        "success": True,
+        "analise": analise,
+    }
+
+
+
 
 
 app.mount("/", StaticFiles(directory=FRONTEND_DIR), name="frontend")

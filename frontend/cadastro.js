@@ -1,6 +1,6 @@
 const cadastroForm = document.getElementById('cadastro-form');
 const cadastroMessage = document.getElementById('cadastro-message');
-const cadastroApiBaseUrl = 'http://127.0.0.1:8000';
+const cadastroApiBaseUrl = ''; // Caminho relativo
 
 cadastroForm.addEventListener('submit', async function (event) {
     event.preventDefault();
@@ -30,8 +30,12 @@ cadastroForm.addEventListener('submit', async function (event) {
 
         const result = await response.json();
 
-        if (!response.ok) {
-            throw new Error(result.message || 'Nao foi possivel cadastrar o usuario.');
+        if (result.user && result.user.nome) {
+            localStorage.setItem('usuarioNome', result.user.nome);
+            localStorage.setItem('usuarioId', result.user.id);
+            if (result.access_token) {
+                localStorage.setItem('accessToken', result.access_token);
+            }
         }
 
         cadastroMessage.style.color = '#2f6044';
@@ -39,7 +43,7 @@ cadastroForm.addEventListener('submit', async function (event) {
         cadastroForm.reset();
 
         window.setTimeout(function () {
-            window.location.href = 'login.html';
+            window.location.href = 'refeicoes.html'; // Vai direto para as refeições após cadastrar
         }, 1200);
     } catch (error) {
         cadastroMessage.style.color = '#b23b3b';
