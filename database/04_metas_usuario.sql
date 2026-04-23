@@ -1,0 +1,10 @@
+CREATE TABLE IF NOT EXISTS metas_usuario (
+    id SERIAL PRIMARY KEY,
+    usuario_id INT NOT NULL REFERENCES usuarios(id) ON DELETE CASCADE,
+    objetivo VARCHAR(20) NOT NULL,
+    calorias FLOAT NOT NULL DEFAULT 0,
+    proteina FLOAT NOT NULL DEFAULT 0,
+    carboidrato FLOAT NOT NULL DEFAULT 0,
+    gordura FLOAT NOT NULL DEFAULT 0,
+    criado_em TIMESTAMP DEFAULT NOW()
+);

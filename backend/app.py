@@ -50,7 +50,7 @@ ACCESS_TOKEN_EXPIRE_MINUTES = int(os.environ.get("ACCESS_TOKEN_EXPIRE_MINUTES", 
 from database import ( # type: ignore
     get_usuario_by_email, get_usuario_by_id, criar_usuario,
     criar_refeicao, criar_alimento_consumido, get_refeicoes_usuario,
-    deletar_refeicao
+    deletar_refeicao, salvar_meta_usuario, get_meta_usuario
 )
 
 app = FastAPI(title="API Gerenciador de Calorias", description="API para gerenciamento de refeições e cálculo de macros via IA.")
@@ -79,6 +79,9 @@ class ProcessarRefeicaoRequest(BaseModel):
 
 class AnalisarAlimentosRequest(BaseModel):
     alimentos: List[AlimentoItem]
+
+class MetaRequest(BaseModel):
+    objetivo: str  # "emagrecer", "ganhar_massa", "manter_peso"
 # -----------------------------------------------
 
 app.add_middleware(
@@ -426,7 +429,147 @@ async def analisar_alimentos(request: AnalisarAlimentosRequest):
     }
 
 
+def gerar_meta_com_openrouter(sexo: str, idade: int, peso: float, objetivo: str) -> dict:
+    """
+    Usa OpenRouter API para gerar metas nutricionais diárias
+    baseadas no perfil do usuário e objetivo escolhido.
+    """
+    objetivos_texto = {
+        "emagrecer": "perder peso / emagrecer com déficit calórico saudável",
+        "ganhar_massa": "ganhar massa muscular com superávit calórico controlado",
+        "manter_peso": "manter o peso atual com equilíbrio calórico"
+    }
+    objetivo_desc = objetivos_texto.get(objetivo, objetivo)
 
+    try:
+        prompt = f"""Você é um nutricionista esportivo especializado em planejamento alimentar.
+
+Baseado no perfil abaixo, calcule as metas nutricionais DIÁRIAS ideais para o objetivo informado:
+
+- Sexo: {sexo or 'não informado'}
+- Idade: {idade or 'não informada'} anos
+- Peso: {peso or 'não informado'} kg
+- Objetivo: {objetivo_desc}
+
+Considere:
+- Taxa metabólica basal (TMB) usando fórmula de Harris-Benedict
+- Fator de atividade moderada (1.55)
+- Ajuste calórico baseado no objetivo (déficit para emagrecer, superávit para ganhar massa)
+- Distribuição adequada de macronutrientes para o objetivo
+
+Retorne EXATAMENTE neste formato JSON, com valores numéricos realistas:
+{{
+    "calorias": 2000,
+    "proteina": 150.0,
+    "carboidrato": 200.0,
+    "gordura": 65.0
+}}"""
+
+        url = "https://openrouter.ai/api/v1/chat/completions"
+
+        headers = {
+            "Authorization": f"Bearer {OPENROUTER_API_KEY}",
+            "Content-Type": "application/json",
+            "HTTP-Referer": "http://127.0.0.1:8000",
+            "X-Title": "Gerenciador Calorias"
+        }
+
+        payload = {
+            "model": "google/gemini-2.5-flash",
+            "messages": [
+                {"role": "user", "content": prompt}
+            ]
+        }
+
+        response = requests.post(url, headers=headers, json=payload, timeout=20)
+
+        if response.status_code == 200:
+            data = response.json()
+            response_text = data.get("choices", [{}])[0].get("message", {}).get("content", "")
+
+            json_match = re.search(r'\{.*\}', response_text, re.DOTALL)
+            if json_match:
+                result = json.loads(json_match.group())
+                if "calorias" in result:
+                    return result
+
+        return {}
+
+    except Exception as e:
+        print(f"Erro ao gerar meta com OpenRouter: {str(e)}")
+        return {}
+
+
+@app.post("/api/meta", tags=["Metas"])
+async def criar_meta(request: MetaRequest, user_id: int = Depends(get_current_user)):
+    """
+    Gera metas nutricionais com IA baseado no perfil do usuário e objetivo escolhido.
+    """
+    objetivo = request.objetivo
+    objetivos_validos = ["emagrecer", "ganhar_massa", "manter_peso"]
+
+    if objetivo not in objetivos_validos:
+        return build_error(f"Objetivo inválido. Use: {', '.join(objetivos_validos)}", 400)
+
+    try:
+        usuario = get_usuario_by_id(user_id)
+        if not usuario:
+            return build_error("Usuário não encontrado", 404)
+
+        meta = gerar_meta_com_openrouter(
+            sexo=usuario.get("sexo"),
+            idade=usuario.get("idade"),
+            peso=usuario.get("peso"),
+            objetivo=objetivo
+        )
+
+        if not meta or "calorias" not in meta:
+            return build_error("Falha ao gerar metas com IA", 500)
+
+        meta_id = salvar_meta_usuario(
+            usuario_id=user_id,
+            objetivo=objetivo,
+            calorias=meta.get("calorias", 0),
+            proteina=meta.get("proteina", 0),
+            carboidrato=meta.get("carboidrato", 0),
+            gordura=meta.get("gordura", 0)
+        )
+
+        return {
+            "success": True,
+            "message": "Meta gerada com sucesso!",
+            "meta": {
+                "id": meta_id,
+                "objetivo": objetivo,
+                "calorias": meta.get("calorias", 0),
+                "proteina": meta.get("proteina", 0),
+                "carboidrato": meta.get("carboidrato", 0),
+                "gordura": meta.get("gordura", 0)
+            }
+        }
+
+    except Exception as e:
+        print(f"Erro ao criar meta: {str(e)}")
+        return build_error(f"Erro ao criar meta: {str(e)}", 500)
+
+
+@app.get("/api/meta", tags=["Metas"])
+async def buscar_meta(user_id: int = Depends(get_current_user)):
+    """
+    Retorna a meta ativa do usuário logado.
+    """
+    try:
+        meta = get_meta_usuario(user_id)
+        if not meta:
+            return {"success": True, "meta": None}
+
+        return {
+            "success": True,
+            "meta": meta
+        }
+    except Exception as e:
+        print(f"Erro ao buscar meta: {str(e)}")
+        return build_error(f"Erro ao buscar meta: {str(e)}", 500)
 
 
 app.mount("/", StaticFiles(directory=FRONTEND_DIR), name="frontend")

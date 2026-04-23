@@ -20,7 +20,39 @@
             <p class="subtitle">Cadastre uma nova refeicao.</p>
 
             <button id="new-meal-button" type="button">Cadastrar uma refeicao</button>
+            <button id="goal-button" type="button" class="goal-btn">Definir Meta</button>
             <p id="action-feedback" class="action-feedback" aria-live="polite"></p>
+            <button id="logout-button" type="button" class="logout-btn">Log-out</button>
+        </section>
+
+        <!-- Dashboard de Meta (visível apenas quando há meta definida) -->
+        <section id="goal-section" class="goal-section reveal hidden">
+            <div class="goal-header">
+                <h2 id="goal-title">🎯 Sua Meta Diária</h2>
+                <button id="change-goal-btn" type="button" class="change-goal-btn">Alterar</button>
+            </div>
+            <div id="goal-dashboard" class="dashboard goal-dashboard">
+                <div class="dashboard-card goal-card">
+                    <div class="dashboard-label">Meta Calorias</div>
+                    <div id="meta-calorias" class="dashboard-value">0</div>
+                    <div class="dashboard-unit">kcal</div>
+                </div>
+                <div class="dashboard-card goal-card">
+                    <div class="dashboard-label">Meta Proteina</div>
+                    <div id="meta-proteina" class="dashboard-value">0</div>
+                    <div class="dashboard-unit">g</div>
+                </div>
+                <div class="dashboard-card goal-card">
+                    <div class="dashboard-label">Meta Carboidrato</div>
+                    <div id="meta-carbo" class="dashboard-value">0</div>
+                    <div class="dashboard-unit">g</div>
+                </div>
+                <div class="dashboard-card goal-card">
+                    <div class="dashboard-label">Meta Gordura</div>
+                    <div id="meta-gordura" class="dashboard-value">0</div>
+                    <div class="dashboard-unit">g</div>
+                </div>
+            </div>
         </section>
 
         <section class="meals-section reveal">
@@ -30,6 +62,7 @@
                 <div class="dashboard-card">
                     <div class="dashboard-label">Total Calorias</div>
                     <div id="total-calorias" class="dashboard-value">0</div>
+                    <div id="saldo-calorias" class="dashboard-saldo"></div>
                     <div class="dashboard-unit">kcal</div>
                 </div>
                 <div class="dashboard-card">
@@ -40,16 +73,19 @@
                 <div class="dashboard-card">
                     <div class="dashboard-label">Proteina</div>
                     <div id="total-proteina" class="dashboard-value">0</div>
+                    <div id="saldo-proteina" class="dashboard-saldo"></div>
                     <div class="dashboard-unit">g</div>
                 </div>
                 <div class="dashboard-card">
                     <div class="dashboard-label">Carboidrato</div>
                     <div id="total-carbo" class="dashboard-value">0</div>
+                    <div id="saldo-carbo" class="dashboard-saldo"></div>
                     <div class="dashboard-unit">g</div>
                 </div>
                 <div class="dashboard-card">
                     <div class="dashboard-label">Gordura</div>
                     <div id="total-gordura" class="dashboard-value">0</div>
+                    <div id="saldo-gordura" class="dashboard-saldo"></div>
                     <div class="dashboard-unit">g</div>
                 </div>
             </div>
@@ -73,6 +109,45 @@
         </div>
     </div>
 
+    <!-- Modal Confirmação de Logout -->
+    <div id="logout-modal" class="modal hidden">
+        <div class="modal-content modal-content-logout">
+            <h2>Sair da conta</h2>
+            <p>Você tem certeza que deseja sair?</p>
+            <div class="modal-actions">
+                <button id="cancel-logout-btn" class="btn-cancel">Não</button>
+                <button id="confirm-logout-btn" class="btn-confirm-logout">Sim, sair</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Seleção de Objetivo -->
+    <div id="goal-modal" class="modal hidden">
+        <div class="modal-content modal-content-goal">
+            <h2>Escolha seu objetivo</h2>
+            <p>Selecione uma meta e a IA vai calcular seus macros diários ideais.</p>
+            <div class="goal-options">
+                <button class="goal-option-btn" data-objetivo="emagrecer">
+                    <span class="goal-icon">🔥</span>
+                    <span class="goal-option-title">Emagrecer</span>
+                    <span class="goal-option-desc">Déficit calórico saudável</span>
+                </button>
+                <button class="goal-option-btn" data-objetivo="ganhar_massa">
+                    <span class="goal-icon">💪</span>
+                    <span class="goal-option-title">Ganhar Massa</span>
+                    <span class="goal-option-desc">Superávit controlado</span>
+                </button>
+                <button class="goal-option-btn" data-objetivo="manter_peso">
+                    <span class="goal-icon">⚖️</span>
+                    <span class="goal-option-title">Manter Peso</span>
+                    <span class="goal-option-desc">Equilíbrio calórico</span>
+                </button>
+            </div>
+            <p id="goal-feedback" class="goal-feedback"></p>
+            <button id="cancel-goal-btn" class="btn-cancel" style="margin-top: 0.5rem;">Cancelar</button>
+        </div>
+    </div>
+
     <script src="refeicoes.js"></script>
 </body>
-</html>
+</html>

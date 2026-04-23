@@ -96,3 +96,27 @@ def deletar_refeicao(refeicao_id: int):
     # Mando deleta os items separadamente por precaução para evitar falhas no caso do banco não ter cascade
     supabase.table('alimentos_consumidos').delete().eq("refeicao_id", refeicao_id).execute()
     supabase.table('refeicoes').delete().eq("id", refeicao_id).execute()
+
+
+def salvar_meta_usuario(usuario_id: int, objetivo: str, calorias: float, proteina: float, carboidrato: float, gordura: float):
+    """Salva a meta nutricional gerada pela IA para o usuário"""
+    data = {
+        "usuario_id": usuario_id,
+        "objetivo": objetivo,
+        "calorias": calorias,
+        "proteina": proteina,
+        "carboidrato": carboidrato,
+        "gordura": gordura
+    }
+    response = supabase.table('metas_usuario').insert(data).execute()
+    if response.data:
+        return response.data[0]["id"]
+    return None
+
+
+def get_meta_usuario(usuario_id: int):
+    """Busca a meta mais recente do usuário"""
+    response = supabase.table('metas_usuario').select("*").eq("usuario_id", usuario_id).order("criado_em", desc=True).limit(1).execute()
+    if response.data:
+        return response.data[0]
+    return None
