@@ -82,6 +82,12 @@ class AnalisarAlimentosRequest(BaseModel):
 
 class MetaRequest(BaseModel):
     objetivo: str  # "emagrecer", "ganhar_massa", "manter_peso"
+
+class MetaManualRequest(BaseModel):
+    calorias: float
+    proteina: float
+    carboidrato: float
+    gordura: float
 # -----------------------------------------------
 
 app.add_middleware(
@@ -570,6 +576,38 @@ async def buscar_meta(user_id: int = Depends(get_current_user)):
     except Exception as e:
         print(f"Erro ao buscar meta: {str(e)}")
         return build_error(f"Erro ao buscar meta: {str(e)}", 500)
+
+
+@app.post("/api/meta/manual", tags=["Metas"])
+async def criar_meta_manual(request: MetaManualRequest, user_id: int = Depends(get_current_user)):
+    """
+    Salva metas nutricionais definidas manualmente pelo usuário (sem IA).
+    """
+    try:
+        meta_id = salvar_meta_usuario(
+            usuario_id=user_id,
+            objetivo="personalizado",
+            calorias=request.calorias,
+            proteina=request.proteina,
+            carboidrato=request.carboidrato,
+            gordura=request.gordura
+        )
+
+        return {
+            "success": True,
+            "message": "Meta salva com sucesso!",
+            "meta": {
+                "id": meta_id,
+                "objetivo": "personalizado",
+                "calorias": request.calorias,
+                "proteina": request.proteina,
+                "carboidrato": request.carboidrato,
+                "gordura": request.gordura
+            }
+        }
+    except Exception as e:
+        print(f"Erro ao salvar meta manual: {str(e)}")
+        return build_error(f"Erro ao salvar meta manual: {str(e)}", 500)
 
 
 app.mount("/", StaticFiles(directory=FRONTEND_DIR), name="frontend")

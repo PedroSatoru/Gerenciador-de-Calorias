@@ -83,8 +83,14 @@ newMealButton.addEventListener('click', function () {
 const objetivosLabel = {
     'emagrecer': '🔥 Emagrecer',
     'ganhar_massa': '💪 Ganhar Massa',
-    'manter_peso': '⚖️ Manter Peso'
+    'manter_peso': '⚖️ Manter Peso',
+    'personalizado': '✏️ Personalizado'
 };
+
+// Elementos do formulário personalizado
+const customGoalBtn = document.getElementById('custom-goal-btn');
+const customGoalForm = document.getElementById('custom-goal-form');
+const saveCustomGoalBtn = document.getElementById('save-custom-goal-btn');
 
 function exibirMeta(meta) {
     if (!meta) {
@@ -154,23 +160,101 @@ async function carregarMeta() {
 // Abrir modal de meta
 goalButton.addEventListener('click', function () {
     goalFeedback.textContent = '';
+    customGoalForm.classList.add('hidden');
     goalModal.classList.remove('hidden');
 });
 
 changeGoalBtn.addEventListener('click', function () {
     goalFeedback.textContent = '';
+    customGoalForm.classList.add('hidden');
     goalModal.classList.remove('hidden');
 });
 
 cancelGoalBtn.addEventListener('click', function () {
     goalModal.classList.add('hidden');
     goalFeedback.textContent = '';
+    customGoalForm.classList.add('hidden');
 });
 
-// Selecionar objetivo
+// Toggle formulário personalizado
+customGoalBtn.addEventListener('click', function () {
+    customGoalForm.classList.toggle('hidden');
+});
+
+// Salvar meta personalizada
+saveCustomGoalBtn.addEventListener('click', async function () {
+    const calorias = parseFloat(document.getElementById('custom-calorias').value);
+    const proteina = parseFloat(document.getElementById('custom-proteina').value);
+    const carboidrato = parseFloat(document.getElementById('custom-carbo').value);
+    const gordura = parseFloat(document.getElementById('custom-gordura').value);
+
+    if (isNaN(calorias) || isNaN(proteina) || isNaN(carboidrato) || isNaN(gordura)) {
+        goalFeedback.textContent = '❌ Preencha todos os campos com valores válidos.';
+        goalFeedback.style.color = '#ef4444';
+        return;
+    }
+
+    if (calorias <= 0 && proteina <= 0 && carboidrato <= 0 && gordura <= 0) {
+        goalFeedback.textContent = '❌ Os valores devem ser maiores que zero.';
+        goalFeedback.style.color = '#ef4444';
+        return;
+    }
+
+    saveCustomGoalBtn.disabled = true;
+    saveCustomGoalBtn.textContent = 'Salvando...';
+    goalFeedback.textContent = '';
+
+    try {
+        const token = localStorage.getItem('accessToken');
+        const response = await fetch('/api/meta/manual', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({ calorias, proteina, carboidrato, gordura })
+        });
+
+        const data = await response.json();
+
+        if (data.success && data.meta) {
+            goalFeedback.textContent = '✅ Meta personalizada salva!';
+            goalFeedback.style.color = '#16a34a';
+
+            exibirMeta(data.meta);
+
+            const totalCalorias = parseFloat(document.getElementById('total-calorias').textContent) || 0;
+            const totalProteina = parseFloat(document.getElementById('total-proteina').textContent) || 0;
+            const totalCarbo = parseFloat(document.getElementById('total-carbo').textContent) || 0;
+            const totalGordura = parseFloat(document.getElementById('total-gordura').textContent) || 0;
+            atualizarSaldo(totalCalorias, totalProteina, totalCarbo, totalGordura);
+
+            setTimeout(function () {
+                goalModal.classList.add('hidden');
+                goalFeedback.textContent = '';
+                customGoalForm.classList.add('hidden');
+            }, 1200);
+        } else {
+            goalFeedback.textContent = '❌ ' + (data.message || 'Erro ao salvar meta.');
+            goalFeedback.style.color = '#ef4444';
+        }
+    } catch (error) {
+        console.error('Erro ao salvar meta personalizada:', error);
+        goalFeedback.textContent = '❌ Erro de comunicação.';
+        goalFeedback.style.color = '#ef4444';
+    } finally {
+        saveCustomGoalBtn.disabled = false;
+        saveCustomGoalBtn.textContent = 'Salvar Meta Personalizada';
+    }
+});
+
+// Selecionar objetivo (apenas botões com data-objetivo, ignora o Personalizado)
 goalOptionBtns.forEach(function (btn) {
     btn.addEventListener('click', async function () {
         const objetivo = btn.getAttribute('data-objetivo');
+
+        // Ignora o botão Personalizado (não tem data-objetivo)
+        if (!objetivo) return;
 
         // Desabilitar todos os botões
         goalOptionBtns.forEach(function (b) { b.disabled = true; });
