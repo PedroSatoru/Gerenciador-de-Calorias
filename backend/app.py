@@ -172,6 +172,11 @@ async def refeicoes_page():
 async def alimentos_page():
     return FileResponse(FRONTEND_DIR / "alimentos.html")
 
+
+@app.get("/historico.html")
+async def historico_page():
+    return FileResponse(FRONTEND_DIR / "historico.html")
+
 @app.post("/api/cadastro", tags=["Autenticação"])
 async def cadastro_usuario(request: CadastroRequest):
     nome = (request.nome or "").strip()

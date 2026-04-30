@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Histórico de Refeições - Gerenciador de Calorias</title>
+    <meta name="description" content="Acompanhe o seu histórico de refeições detalhado, filtre por datas e mantenha sua rotina alimentar inteligente sob controle.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;700;800&family=Fraunces:opsz,wght@9..144,700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="refeicoes.css">
+    <link rel="stylesheet" href="historico.css">
+</head>
+<body>
+    <div class="glow glow-left" aria-hidden="true"></div>
+    <div class="glow glow-right" aria-hidden="true"></div>
+
+    <main class="screen">
+        <section class="hero-card reveal">
+            <p class="eyebrow">Acompanhamento contínuo</p>
+            <h1 id="welcome-title">Histórico de Refeições</h1>
+            <p class="subtitle">Consulte suas refeições anteriores e acompanhe seu progresso.</p>
+
+            <button id="back-button" type="button" class="btn-cancel" onclick="window.location.href='/refeicoes.html'">Voltar para Hoje</button>
+            <p id="action-feedback" class="action-feedback" aria-live="polite"></p>
+        </section>
+
+        <section class="filter-section reveal">
+            <h2>Filtro por Período</h2>
+            <form id="filter-form" class="filter-form">
+                <div class="date-inputs">
+                    <div class="input-group">
+                        <label for="data-inicio">Data Inicial</label>
+                        <input type="date" id="data-inicio" name="data-inicio" required>
+                    </div>
+                    <div class="input-group">
+                        <label for="data-fim">Data Final</label>
+                        <input type="date" id="data-fim" name="data-fim" required>
+                    </div>
+                </div>
+                <button type="submit" id="filter-button" class="filter-btn">Filtrar Histórico</button>
+                <button type="button" id="clear-filter-button" class="btn-cancel">Semana Atual</button>
+            </form>
+        </section>
+
+        <section class="meals-section reveal">
+            <h2 id="period-title">Semana Atual</h2>
+
+            <div id="historico-container" class="meals-container historico-container">
+                <p id="loading-message" class="loading-message">Carregando histórico...</p>
+            </div>
+        </section>
+
+    </main>
+
+    <script src="historico.js"></script>
+</body>
+</html>
