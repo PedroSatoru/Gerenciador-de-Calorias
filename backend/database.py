@@ -84,6 +84,15 @@ def get_refeicoes_usuario(usuario_id: int, data: Optional[str] = None):
     return response.data
 
 
+def get_refeicoes_usuario_por_periodo(usuario_id: int, data_inicio: str, data_fim: str):
+    """Busca refeições de um usuário dentro de um período de datas, retornadas ordenadas"""
+    query = supabase.table('refeicoes').select("*").eq("usuario_id", usuario_id)
+    query = query.gte("data_refeicao", data_inicio).lte("data_refeicao", data_fim)
+    
+    response = query.order("data_refeicao", desc=True).order("horario", desc=True).execute()
+    return response.data
+
+
 def get_alimentos_refeicao(refeicao_id: int):
     """Busca os itens/alimentos inseridos dentro de certa refeição"""
     response = supabase.table('alimentos_consumidos').select("*").eq("refeicao_id", refeicao_id).order("id").execute()

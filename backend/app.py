@@ -50,7 +50,8 @@ ACCESS_TOKEN_EXPIRE_MINUTES = int(os.environ.get("ACCESS_TOKEN_EXPIRE_MINUTES", 
 from database import ( # type: ignore
     get_usuario_by_email, get_usuario_by_id, criar_usuario,
     criar_refeicao, criar_alimento_consumido, get_refeicoes_usuario,
-    deletar_refeicao, salvar_meta_usuario, get_meta_usuario
+    deletar_refeicao, salvar_meta_usuario, get_meta_usuario,
+    get_refeicoes_usuario_por_periodo
 )
 
 app = FastAPI(title="API Gerenciador de Calorias", description="API para gerenciamento de refeições e cálculo de macros via IA.")
@@ -400,6 +401,39 @@ async def get_refeicoes_dia(user_id: int = Depends(get_current_user)):
     except Exception as e:
         print(f"Erro buscar refeicoes: {str(e)}")
         return build_error(f"Erro ao buscar refeicoes: {str(e)}", 500)
+
+@app.get("/api/refeicoes/historico", tags=["Refeições"])
+async def get_historico_refeicoes(
+    data_inicio: Optional[str] = None, 
+    data_fim: Optional[str] = None, 
+    user_id: int = Depends(get_current_user)
+):
+    try:
+        usuario = get_usuario_by_id(user_id)
+        if not usuario:
+            return build_error("Usuario nao encontrado", 404)
+        
+        # Se as datas não forem fornecidas, pega a semana atual (segunda a domingo)
+        if not data_inicio or not data_fim:
+            hoje = datetime.now().date()
+            # weekday() retorna 0 para segunda e 6 para domingo
+            inicio_semana = hoje - timedelta(days=hoje.weekday())
+            fim_semana = inicio_semana + timedelta(days=6)
+            
+            data_inicio = inicio_semana.isoformat()
+            data_fim = fim_semana.isoformat()
+            
+        refeicoes = get_refeicoes_usuario_por_periodo(user_id, data_inicio, data_fim)
+        
+        return {
+            "success": True,
+            "refeicoes": refeicoes,
+            "data_inicio": data_inicio,
+            "data_fim": data_fim
+        }
+    except Exception as e:
+        print(f"Erro buscar historico de refeicoes: {str(e)}")
+        return build_error(f"Erro ao buscar historico de refeicoes: {str(e)}", 500)
 
 @app.delete("/api/refeicoes/{refeicao_id}", tags=["Refeições"])
 async def deletar_refeicao_endpoint(refeicao_id: int, user_id: int = Depends(get_current_user)):
