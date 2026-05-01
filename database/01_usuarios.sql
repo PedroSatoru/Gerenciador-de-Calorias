@@ -5,7 +5,8 @@ CREATE TABLE IF NOT EXISTS usuarios (
     senha VARCHAR(255) NOT NULL,
     sexo VARCHAR(10),
     peso FLOAT,
-    idade INT
+    idade INT,
+    altura FLOAT
 );
 
 

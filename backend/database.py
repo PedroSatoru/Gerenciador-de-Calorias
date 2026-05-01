@@ -26,7 +26,7 @@ def get_usuario_by_id(usuario_id: int):
     return None
 
 
-def criar_usuario(nome: str, email: str, senha_hash: str, sexo: Optional[str] = None, peso: Optional[float] = None, idade: Optional[int] = None):
+def criar_usuario(nome: str, email: str, senha_hash: str, sexo: Optional[str] = None, peso: Optional[float] = None, idade: Optional[int] = None, altura: Optional[float] = None):
     """Cria novo usuário no Supabase e retorna seu ID"""
     data = {
         "nome": nome,
@@ -34,7 +34,8 @@ def criar_usuario(nome: str, email: str, senha_hash: str, sexo: Optional[str] = 
         "senha": senha_hash,
         "sexo": sexo,
         "peso": peso,
-        "idade": idade
+        "idade": idade,
+        "altura": altura
     }
     response = supabase.table('usuarios').insert(data).execute()
     if response.data:

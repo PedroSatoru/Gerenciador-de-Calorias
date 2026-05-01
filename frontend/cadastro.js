@@ -12,8 +12,16 @@ cadastroForm.addEventListener('submit', async function (event) {
         senha: document.getElementById('senha').value,
         sexo: document.getElementById('sexo').value,
         idade: document.getElementById('idade').value,
-        peso: document.getElementById('peso').value
+        peso: document.getElementById('peso').value,
+        altura: document.getElementById('altura').value
     };
+
+    const alturaVal = parseFloat(payload.altura);
+    if (alturaVal < 50 || alturaVal > 250) {
+        cadastroMessage.style.color = '#b23b3b';
+        cadastroMessage.textContent = 'A altura deve ser entre 50cm e 250cm.';
+        return;
+    }
 
     cadastroMessage.style.color = '#385444';
     cadastroMessage.textContent = 'Cadastrando...';

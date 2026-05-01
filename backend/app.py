@@ -64,6 +64,7 @@ class CadastroRequest(BaseModel):
     sexo: Optional[str] = None
     peso: Optional[float] = None
     idade: Optional[int] = None
+    altura: Optional[float] = None
 
 class LoginRequest(BaseModel):
     email: str
@@ -185,6 +186,11 @@ async def cadastro_usuario(request: CadastroRequest):
     sexo = (request.sexo or "").strip() or None
     peso = request.peso
     idade = request.idade
+    altura = request.altura
+
+    if altura is not None:
+        if altura < 50 or altura > 250:
+            return build_error("A altura informada é inválida (deve estar entre 50 e 250 cm).", 400)
 
     if not nome or not email or not senha:
         return build_error("Nome, email e senha sao obrigatorios.", 400)
@@ -200,7 +206,8 @@ async def cadastro_usuario(request: CadastroRequest):
             senha_hash=generate_password_hash(senha),
             sexo=sexo,
             peso=peso,
-            idade=idade
+            idade=idade,
+            altura=altura
         )
         
         usuario = get_usuario_by_id(usuario_id)
@@ -474,7 +481,7 @@ async def analisar_alimentos(request: AnalisarAlimentosRequest):
     }
 
 
-def gerar_meta_com_openrouter(sexo: str, idade: int, peso: float, objetivo: str) -> dict:
+def gerar_meta_com_openrouter(sexo: str, idade: int, peso: float, altura: float, objetivo: str) -> dict:
     """
     Usa OpenRouter API para gerar metas nutricionais diárias
     baseadas no perfil do usuário e objetivo escolhido.
@@ -494,6 +501,7 @@ Baseado no perfil abaixo, calcule as metas nutricionais DIÁRIAS ideais para o o
 - Sexo: {sexo or 'não informado'}
 - Idade: {idade or 'não informada'} anos
 - Peso: {peso or 'não informado'} kg
+- Altura: {altura or 'não informada'} cm
 - Objetivo: {objetivo_desc}
 
 Considere:
@@ -565,6 +573,7 @@ async def criar_meta(request: MetaRequest, user_id: int = Depends(get_current_us
             sexo=usuario.get("sexo"),
             idade=usuario.get("idade"),
             peso=usuario.get("peso"),
+            altura=usuario.get("altura"),
             objetivo=objetivo
         )
 
