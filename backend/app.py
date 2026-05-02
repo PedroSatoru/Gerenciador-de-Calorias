@@ -447,6 +447,101 @@ async def get_historico_refeicoes(
         print(f"Erro buscar historico de refeicoes: {str(e)}")
         return build_error(f"Erro ao buscar historico de refeicoes: {str(e)}", 500)
 
+@app.get("/api/refeicoes/grafico-semanal", tags=["Refeições"])
+async def get_grafico_semanal(user_id: int = Depends(get_current_user)):
+    try:
+        usuario = get_usuario_by_id(user_id)
+        if not usuario:
+            return build_error("Usuario nao encontrado", 404)
+
+        # Get current goal
+        meta = get_meta_usuario(user_id)
+        meta_calorias = meta.get("calorias", 0) if meta else 0
+
+        # Define 7 days range (Sunday to Saturday of current week)
+        hoje = datetime.now().date()
+        dias_para_domingo = (hoje.weekday() + 1) % 7
+        inicio_semana = hoje - timedelta(days=dias_para_domingo)
+        fim_semana = inicio_semana + timedelta(days=6)
+        
+        data_inicio = inicio_semana.isoformat()
+        data_fim = fim_semana.isoformat()
+        
+        refeicoes = get_refeicoes_usuario_por_periodo(user_id, data_inicio, data_fim)
+        
+        # Initialize days dictionary
+        dias_agregados = {}
+        for i in range(7):
+            data_atual = (inicio_semana + timedelta(days=i)).isoformat()
+            dias_agregados[data_atual] = {
+                "data": data_atual,
+                "calorias": 0,
+                "proteina": 0,
+                "carboidrato": 0,
+                "gordura": 0
+            }
+        
+        # Aggregate meals
+        for ref in refeicoes:
+            data_ref = ref.get("data_refeicao")
+            if data_ref in dias_agregados:
+                dias_agregados[data_ref]["calorias"] += ref.get("calorias", 0)
+                dias_agregados[data_ref]["proteina"] += ref.get("proteina", 0)
+                dias_agregados[data_ref]["carboidrato"] += ref.get("carboidrato", 0)
+                dias_agregados[data_ref]["gordura"] += ref.get("gordura", 0)
+
+        # Calculate averages and goal achievements
+        dados_dias = list(dias_agregados.values())
+        
+        total_calorias = 0
+        total_proteina = 0
+        total_carbo = 0
+        total_gordura = 0
+        dias_meta_atingida = 0
+        dias_exatos_atingidos = []
+        dias_com_registro = 0
+
+        for dia in dados_dias:
+            total_calorias += dia["calorias"]
+            total_proteina += dia["proteina"]
+            total_carbo += dia["carboidrato"]
+            total_gordura += dia["gordura"]
+
+            if dia["calorias"] > 0:
+                dias_com_registro += 1
+
+            atingiu = False
+            # Tolerance 10% below goal to consider achieved/surpassed
+            if meta_calorias > 0 and dia["calorias"] >= (meta_calorias * 0.9) and dia["calorias"] > 0:
+                atingiu = True
+                dias_meta_atingida += 1
+                dias_exatos_atingidos.append(dia["data"])
+            dia["atingiu_meta"] = atingiu
+
+        divisor = dias_com_registro if dias_com_registro > 0 else 1
+        media_calorias = total_calorias / divisor
+        media_proteina = total_proteina / divisor
+        media_carbo = total_carbo / divisor
+        media_gordura = total_gordura / divisor
+
+        return {
+            "success": True,
+            "dados_dias": dados_dias,
+            "resumo": {
+                "media_calorias": round(media_calorias, 1),
+                "media_proteina": round(media_proteina, 1),
+                "media_carboidrato": round(media_carbo, 1),
+                "media_gordura": round(media_gordura, 1),
+                "dias_meta_atingida": dias_meta_atingida,
+                "dias_exatos_atingidos": dias_exatos_atingidos,
+                "meta_atual": meta_calorias,
+                "dias_com_registro": dias_com_registro
+            }
+        }
+    except Exception as e:
+        print(f"Erro buscar grafico semanal: {str(e)}")
+        return build_error(f"Erro ao buscar grafico semanal: {str(e)}", 500)
+
 @app.delete("/api/refeicoes/{refeicao_id}", tags=["Refeições"])
 async def deletar_refeicao_endpoint(refeicao_id: int, user_id: int = Depends(get_current_user)):
     if not refeicao_id:
