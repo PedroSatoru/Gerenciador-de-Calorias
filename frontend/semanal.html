@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Métricas Semanais - Gerenciador de Calorias</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;700;800&family=Fraunces:opsz,wght@9..144,700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="semanal.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <div class="glow glow-left" aria-hidden="true"></div>
+    <div class="glow glow-right" aria-hidden="true"></div>
+
+    <main class="screen">
+        <header class="page-header reveal">
+            <button id="back-button" class="btn-back" onclick="window.location.href='/refeicoes.html'">
+                <span>&larr; Voltar ao Dashboard</span>
+            </button>
+            <h1 class="page-title">Métricas Semanais</h1>
+            <p class="page-subtitle">Acompanhe sua evolução dos últimos 7 dias</p>
+        </header>
+
+        <!-- Empty State (Escondido por padrão) -->
+        <section id="empty-state" class="empty-state hidden reveal delay-1">
+            <div class="empty-state-icon">📊</div>
+            <h3>Sem dados na semana</h3>
+            <p>Comece a registrar refeições no seu dashboard para ver os seus gráficos semanais e estatísticas de alcance de meta.</p>
+        </section>
+
+        <!-- Container de Gráficos e Resumos -->
+        <div id="metrics-container" class="metrics-grid hidden reveal delay-1">
+            
+            <!-- Linha 1: Resumos -->
+            <section class="summary-cards">
+                <div class="summary-card glass-panel">
+                    <div class="card-label">Média de Calorias</div>
+                    <div id="media-calorias" class="card-value">0</div>
+                    <div class="card-unit">kcal / dia</div>
+                </div>
+                <div class="summary-card glass-panel">
+                    <div class="card-label">Dias de Meta Atingida</div>
+                    <div id="dias-meta" class="card-value">0</div>
+                    <div class="card-unit">dias</div>
+                </div>
+                <div class="summary-card glass-panel">
+                    <div class="card-label">Dias com Registros</div>
+                    <div id="dias-registro" class="card-value">0</div>
+                    <div class="card-unit">dias na semana</div>
+                </div>
+            </section>
+
+            <!-- Linha 2: Gráfico Principal de Barras e Pizza -->
+            <section class="charts-row">
+                <div class="chart-wrapper glass-panel chart-main">
+                    <h3>Calorias Diárias vs Meta</h3>
+                    <div class="canvas-container">
+                        <canvas id="caloriesChart"></canvas>
+                    </div>
+                </div>
+                <div class="chart-wrapper glass-panel chart-side">
+                    <h3>Alcance de Metas</h3>
+                    <div class="canvas-container canvas-pie">
+                        <canvas id="goalsChart"></canvas>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Linha 3: Gráfico de Linhas para Macros -->
+            <section class="charts-row">
+                <div class="chart-wrapper glass-panel chart-full">
+                    <h3>Evolução de Macronutrientes (g)</h3>
+                    <div class="canvas-container">
+                        <canvas id="macrosChart"></canvas>
+                    </div>
+                </div>
+            </section>
+
+        </div>
+    </main>
+
+    <script src="semanal.js"></script>
+</body>
+</html>
