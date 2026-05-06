@@ -35,20 +35,23 @@ const horaAtual = new Date().getHours();
 let metaAtiva = null;
 
 // Registra eventos ANTES de qualquer redirecionamento
-logoutButton.addEventListener('click', function () {
+const handleAbrirLogout = () => {
     logoutModal.classList.remove('hidden');
-});
+};
 
-cancelLogoutBtn.addEventListener('click', function () {
+const handleFecharLogout = () => {
     logoutModal.classList.add('hidden');
-});
+};
 
-confirmLogoutBtn.addEventListener('click', function () {
-    localStorage.removeItem('accessToken');
-    localStorage.removeItem('usuarioNome');
-    localStorage.removeItem('usuarioId');
-    window.location.href = 'login.html';
-});
+const handleConfirmarLogout = () => {
+    const chavesParaRemover = ['accessToken', 'usuarioNome', 'usuarioId'];
+    chavesParaRemover.forEach(chave => localStorage.removeItem(chave));
+    window.location.replace('login.html');
+};
+
+logoutButton.addEventListener('click', handleAbrirLogout);
+cancelLogoutBtn.addEventListener('click', handleFecharLogout);
+confirmLogoutBtn.addEventListener('click', handleConfirmarLogout);
 
 function saudacaoPorHorario(hora) {
     if (hora < 12) {
